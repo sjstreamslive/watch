@@ -1,0 +1,2466 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="referrer" content="no-referrer">
+<title>SJ STREAMS</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@5.2.4/dist/controls.css">
+<script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+
+<style>
+/* ============================================================
+   THEME — "Midnight Mint"
+   ============================================================ */
+:root{
+  --bg:#000000; --surface:#0F141C; --surface-2:#151C26; --surface-3:#1C2531;
+  --border:#212B39; --border-2:#2C3848;
+  --text:#EDF2F9; --text-dim:#A3B3C6; --muted:#6E7E94;
+  --accent:#00E5B0; --accent-2:#22D3EE;
+  --accent-soft:rgba(0,229,176,.12); --accent-glow:rgba(0,229,176,.25);
+  --live:#FF4D6D; --live-soft:rgba(255,77,109,.12);
+  --soon:#FFB020; --soon-soft:rgba(255,176,32,.12);
+  --done:#6E7E94; --done-soft:rgba(110,126,148,.12);
+  --radius:18px; --radius-md:14px;
+  --shadow:0 4px 24px rgba(0,0,0,.35); --shadow-lg:0 24px 60px rgba(0,0,0,.5);
+  --font-d:'Space Grotesk','Inter',system-ui,sans-serif;
+  --font-b:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font:400 15px/1.5 var(--font-b); color:var(--text); background:var(--bg);
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+  padding-bottom:40px; position:relative; overflow-x:hidden;
+}
+body::before{
+  content:""; position:fixed; top:-30%; left:50%; transform:translateX(-50%);
+  width:900px; height:900px;
+  background:none;
+  pointer-events:none; z-index:0;
+}
+body::after{
+  content:""; position:fixed; bottom:-40%; right:-10%; width:700px; height:700px;
+  background:none;
+  pointer-events:none; z-index:0;
+}
+
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--accent);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+img{display:block;max-width:100%}
+[hidden]{display:none !important}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.container{max-width:1320px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.view{display:none}
+.view.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:22px 0 20px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:46px;height:46px;border-radius:14px;
+  background:linear-gradient(135deg,#00E5B0,#22D3EE);
+  display:grid;place-items:center;font-size:22px;
+  box-shadow:0 6px 24px var(--accent-glow); flex:none;
+}
+.brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:inherit;}
+.brand-text h1{
+  font:700 22px/1.1 var(--font-d); letter-spacing:-.01em;
+  background:linear-gradient(100deg,#FDBE02 0%,#FFFFFF 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.brand-text p{font-size:12.5px;color:var(--muted);margin-top:2px;font-weight:500}
+
+.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.live-pill{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:999px;
+  background:var(--live-soft);border:1px solid rgba(255,77,109,.25);
+  color:var(--live);font-size:12.5px;font-weight:600;
+}
+.live-pill .dot{
+  width:7px;height:7px;border-radius:50%;background:var(--live);
+  animation:pulse 1.3s infinite;
+}
+@keyframes pulse{50%{opacity:.3}}
+.clock{font-size:12.5px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.join-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:999px;
+  background:linear-gradient(135deg,#00E5B0,#22D3EE);
+  color:#04110D;font-size:13px;font-weight:700;
+  transition:transform .18s ease,box-shadow .18s ease;
+  box-shadow:0 4px 16px var(--accent-glow);
+}
+.join-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px var(--accent-glow)}
+.join-btn svg{width:15px;height:15px}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+.filters{
+  display:flex;flex-direction:column;gap:10px;
+  padding:4px 0 22px;border-bottom:1px solid var(--border);margin-bottom:24px;
+}
+.filter-row{
+  display:flex;gap:8px;overflow-x:auto;padding:2px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.filter-row::-webkit-scrollbar{display:none}
+
+.pill{
+  flex:none;display:inline-flex;align-items:center;gap:7px;
+  padding:9px 15px;border-radius:999px;
+  font-size:13.5px;font-weight:600;
+  color:var(--text-dim);background:var(--surface);
+  border:1px solid var(--border);transition:all .18s ease;white-space:nowrap;
+}
+.pill:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+.pill.active{color:var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+.pill .count{
+  font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;
+  background:var(--surface-3);color:var(--muted);
+}
+.pill.active .count{background:rgba(0,229,176,.2);color:var(--accent)}
+.pill[data-tab="live"].active{color:var(--live);background:var(--live-soft);border-color:var(--live)}
+.pill[data-tab="live"].active .count{background:rgba(255,77,109,.2);color:var(--live)}
+
+/* ============================================================
+   MATCH GRID
+   ============================================================ */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
+  gap:16px;padding-bottom:48px;
+}
+
+.card{
+  display:flex;flex-direction:column;gap:14px;padding:18px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+  text-align:left;font:inherit;color:inherit;
+  transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease,background .2s ease;
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0;transition:opacity .25s ease;
+}
+.card:hover{border-color:var(--border-2);transform:translateY(-3px);box-shadow:var(--shadow);background:var(--surface-2)}
+.card:hover::before{opacity:.7}
+.card.is-live::before{background:linear-gradient(90deg,transparent,var(--live),transparent);opacity:.9}
+.card.is-live{border-color:rgba(255,77,109,.25)}
+
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sport-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted);min-width:0;
+}
+.sport-chip .icon{font-size:14px;flex:none}
+.sport-chip .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.status{
+  flex:none;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:4px 10px;border-radius:999px;text-transform:uppercase;
+}
+.status.live{color:var(--live);background:var(--live-soft);border:1px solid rgba(255,77,109,.3)}
+.status.soon{color:var(--soon);background:var(--soon-soft);border:1px solid rgba(255,176,32,.3)}
+.status.done{color:var(--done);background:var(--done-soft);border:1px solid rgba(110,126,148,.25)}
+
+.card-body{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:6px 0}
+.team{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0}
+.crest{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--surface-3);border:1px solid var(--border);
+  display:grid;place-items:center;overflow:hidden;position:relative;
+  font-weight:700;font-size:15px;color:var(--muted);flex:none;
+}
+.crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--surface-3);padding:4px}
+.team-name{
+  font-size:13px;font-weight:600;text-align:center;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.versus{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 4px}
+.kickoff-time{font:700 20px/1 var(--font-d);color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kickoff-date{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+
+.card-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:12px;border-top:1px solid var(--border);font-size:12px;
+}
+.stream-count{color:var(--muted);font-weight:500}
+.stream-count.empty{color:var(--live)}
+.watch-cta{display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:700;font-size:12.5px;transition:gap .18s ease}
+.card:hover .watch-cta{gap:8px}
+.watch-cta .arrow{transition:transform .18s ease}
+.card:hover .watch-cta .arrow{transform:translateX(2px)}
+
+/* ============================================================
+   PLAYER VIEW
+   ============================================================ */
+.player-top{display:flex;align-items:center;gap:14px;padding:22px 0 20px;flex-wrap:wrap}
+.icon-btn{
+  width:44px;height:44px;border-radius:14px;
+  border:1px solid var(--border);background:var(--surface);
+  display:grid;place-items:center;font-size:18px;color:var(--text);
+  transition:all .18s ease;flex:none;
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-2)}
+.player-meta{flex:1;min-width:0}
+.player-title{font:700 clamp(19px,3.5vw,26px)/1.15 var(--font-d);letter-spacing:-.01em;overflow-wrap:anywhere}
+.player-sub{color:var(--muted);font-size:13px;margin-top:3px;font-weight:500}
+
+.screen{
+  position:relative;background:#000;
+  border-radius:var(--radius);overflow:hidden;
+  aspect-ratio:16/9;width:100%;
+  max-width:min(980px, calc((100vh - 180px) * 16 / 9));
+  max-width:min(980px, calc((100dvh - 180px) * 16 / 9));
+  margin:0 auto;border:1px solid var(--border);box-shadow:var(--shadow-lg);
+}
+@media (max-height:520px){
+  .screen{
+    max-width:min(980px, calc((100vh - 100px) * 16 / 9));
+    max-width:min(980px, calc((100dvh - 100px) * 16 / 9));
+    border-radius:12px;
+  }
+  .player-top{padding:12px 0 12px}
+  .player-title{font-size:16px}
+  .player-sub{display:none}
+}
+
+#player-container{position:absolute;inset:0;background:#000}
+#player-container video{
+  width:100%;height:100%;object-fit:contain;background:#000;display:block;
+}
+#player-container video.mode-fill{object-fit:fill}
+#player-container video.mode-cover{object-fit:cover}
+
+#player-container:fullscreen{width:100%;height:100%;background:#000}
+#player-container:-webkit-full-screen{width:100%;height:100%;background:#000}
+
+#jw-root,#jw-root .jw-wrapper,#jw-root video{width:100%!important;height:100%!important}
+#jw-root{position:absolute;inset:0}
+
+/* ============================================================
+   STATUS TOAST
+   ============================================================ */
+#status{
+  position:absolute;top:12px;left:12px;
+  transform:translateY(-10px);
+  z-index:9998;
+  display:flex;align-items:center;gap:7px;
+  padding:6px 15px 6px 11px;
+  background:rgba(10,10,10,.92);
+  border:1px solid rgba(255,255,255,.07);
+  font-size:11.5px;font-weight:500;letter-spacing:.2px;
+  border-radius:24px;pointer-events:none;
+  opacity:0;transition:opacity .25s ease,transform .25s ease;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;
+  box-shadow:0 2px 14px rgba(0,0,0,.45);
+  color:#c0c0c0;
+}
+#status.show{opacity:1;transform:translateY(0)}
+#status.ok .st-dot{background:#60a5fa}
+#status.live{color:#c8c8c8}
+#status.live .st-dot{background:#22d3a0;animation:dot-pulse 2s ease-in-out infinite}
+#status.warn{color:#fcd34d}
+#status.warn .st-dot{background:#fb923c;animation:dot-pulse 1s ease-in-out infinite}
+#status.err{color:#fca5a5}
+#status.err .st-dot{background:#f87171}
+.st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+@keyframes dot-pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.35;transform:scale(.55)}
+}
+
+/* ============================================================
+   LOADING OVERLAY
+   ============================================================ */
+.loading-overlay{
+  position:absolute;inset:0;z-index:9997;
+  background:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.loading-overlay svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay p{color:#8f9baa;font-size:12.5px;letter-spacing:.5px;text-align:center;padding:0 24px;font-weight:500}
+
+/* ============================================================
+   SHAKA FIT BUTTON
+   ============================================================ */
+.sp-btn{
+  background:transparent!important;border:none!important;cursor:pointer!important;
+  padding:0 8px!important;opacity:.75;
+  display:flex;align-items:center;justify-content:center;
+  height:100%;min-width:36px;
+  transition:opacity .15s,color .15s;
+  color:#fff!important;-webkit-tap-highlight-color:transparent;
+}
+.sp-btn:hover{opacity:1}
+.sp-btn:active{opacity:1;transform:scale(.9)}
+.sp-btn:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;border-radius:6px}
+.sp-btn.active{opacity:1;color:#38bdf8!important}
+.sp-fit-btn{padding:0 7px!important;min-width:auto!important}
+.fit-pill{
+  font-size:10px;font-weight:700;letter-spacing:.4px;
+  padding:3px 7px;border-radius:4px;line-height:1;
+  border:1.5px solid rgba(255,255,255,.28);
+  color:rgba(255,255,255,.8);
+  pointer-events:none;white-space:nowrap;
+  transition:border-color .2s,color .2s;
+}
+.sp-fit-btn:hover .fit-pill{border-color:rgba(255,255,255,.55);color:#fff}
+.sp-fit-btn.mode-fill .fit-pill{border-color:#38bdf8;color:#38bdf8}
+.sp-fit-btn.mode-cover .fit-pill{border-color:#a78bfa;color:#a78bfa}
+
+/* ============================================================
+   SHAKA UI OVERRIDES
+   ============================================================ */
+.shaka-controls-container button{color:#fff!important}
+.shaka-video-container{background-color:#000!important}
+.shaka-spinner-container{display:none!important}
+.shaka-video-container .shaka-scrim-container{
+  background:linear-gradient(180deg,
+    rgba(0,0,0,.5) 0%, transparent 25%, transparent 55%, rgba(0,0,0,.75) 100%) !important;
+}
+.shaka-video-container .shaka-bottom-controls{
+  padding-bottom:max(env(safe-area-inset-bottom,0px),6px) !important;
+}
+.shaka-overflow-menu,
+.shaka-settings-menu{
+  background-color:rgba(15,20,28,.97) !important;
+  border:1px solid #212B39 !important;
+  border-radius:14px !important;
+  padding:6px !important;
+  box-shadow:0 16px 40px rgba(0,0,0,.7) !important;
+}
+.shaka-overflow-menu li,
+.shaka-settings-menu li{padding:0 !important;margin:2px 0 !important}
+.shaka-overflow-menu button,
+.shaka-settings-menu button{
+  color:#EDF2F9 !important;padding:10px 14px !important;
+  border-radius:8px !important;font-size:13px !important;
+  transition:background .15s ease,color .15s ease !important;
+}
+.shaka-overflow-menu button:hover,
+.shaka-settings-menu button:hover{background-color:rgba(255,255,255,.06) !important}
+.shaka-settings-menu button.shaka-chosen-item{
+  color:#00E5B0 !important;background-color:rgba(0,229,176,.12) !important;
+}
+.shaka-settings-menu .shaka-back-to-overflow-button{
+  color:#00E5B0 !important;border-bottom:1px solid #212B39 !important;margin-bottom:4px !important;
+}
+.shaka-play-button{filter:drop-shadow(0 4px 16px rgba(0,229,176,.35)) !important}
+.shaka-video-container .shaka-range-element{accent-color:#00E5B0}
+
+/* ============================================================
+   STREAM LIST
+   ============================================================ */
+.section-title{
+  font:600 13px var(--font-b);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);max-width:980px;margin:28px auto 12px;
+}
+.streams{display:flex;flex-direction:column;gap:8px;max-width:980px;margin:0 auto}
+.stream-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;padding:14px 16px;border-radius:var(--radius-md);
+  text-align:left;color:var(--text);
+  border:1px solid var(--border);background:var(--surface);
+  transition:all .18s ease;
+}
+.stream-btn:hover{border-color:var(--border-2);background:var(--surface-2)}
+.stream-btn.active{
+  border-color:var(--accent);background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.stream-btn .title{
+  font-weight:600;font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.stream-btn .tags{display:flex;align-items:center;gap:8px;flex:none}
+.type-badge{
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:3px 9px;border-radius:999px;
+  background:var(--surface-3);color:var(--text-dim);
+}
+.type-badge.dash{color:#8B9DFF;background:rgba(139,157,255,.12)}
+.type-badge.hls{color:#FFB020;background:rgba(255,176,32,.12)}
+.stream-btn.active .type-badge{background:rgba(0,229,176,.18);color:var(--accent)}
+
+/* ============================================================
+   STATES
+   ============================================================ */
+.state{
+  grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;gap:14px;text-align:center;
+}
+.state h3{font:600 18px var(--font-d);color:var(--text)}
+.state p{color:var(--muted);font-size:13.5px;max-width:400px}
+.err-icon{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--live-soft);color:var(--live);
+  display:grid;place-items:center;font-size:22px;
+}
+
+/* ============================================================
+   TELEGRAM POPUP
+   ============================================================ */
+#tgOverlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;
+  z-index:999999;padding:20px;
+}
+#tgOverlay.show{display:flex;animation:fadeInPopup .4s cubic-bezier(.25,.8,.25,1)}
+@keyframes fadeInPopup{from{opacity:0}to{opacity:1}}
+
+#tgCard{
+  width:100%;max-width:400px;
+  background:linear-gradient(160deg,#121A2F,#0A0F1D);
+  border:1px solid rgba(0,229,176,.2);
+  border-radius:24px;padding:36px 28px 28px;
+  box-shadow:0 40px 80px rgba(0,0,0,.8),0 0 60px rgba(0,229,176,.06);
+  text-align:center;position:relative;overflow:hidden;
+  animation:popupScale .4s cubic-bezier(.25,.8,.25,1);
+}
+@keyframes popupScale{
+  from{transform:scale(.95) translateY(12px);opacity:0}
+  to{transform:scale(1) translateY(0);opacity:1}
+}
+#tgCard::before{
+  content:"";position:absolute;top:-50%;left:-50%;
+  width:200%;height:200%;
+  background:radial-gradient(circle at 30% 20%,rgba(0,229,176,.06),transparent 60%);
+  pointer-events:none;
+}
+#tgIcon{
+  width:72px;height:72px;margin:0 auto 16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#2AABEE,#229ED9);
+  box-shadow:0 0 40px rgba(42,171,238,.3);
+  position:relative;z-index:1;
+}
+#tgIcon svg{width:36px;height:36px}
+#tgCard h2{
+  margin:0 0 8px;font-size:clamp(1.3rem,2.5vw,1.8rem);font-weight:700;
+  color:#fff;font-family:'Space Grotesk','Inter',system-ui,sans-serif;
+  position:relative;z-index:1;letter-spacing:-.01em;
+}
+#tgCard p{
+  margin:0 0 24px;color:#8e9baf;
+  font-size:clamp(.9rem,1.2vw,1.05rem);line-height:1.6;
+  position:relative;z-index:1;
+}
+#tgCard p b{color:#00E5B0;font-weight:600}
+.tgBtns{display:flex;gap:12px;position:relative;z-index:1}
+.tgBtn{
+  flex:1;height:48px;border-radius:40px;font-weight:700;
+  font-size:clamp(.85rem,1vw,1rem);cursor:pointer;
+  transition:all .25s ease;border:none;
+  font-family:'Inter',system-ui,sans-serif;letter-spacing:.01em;
+}
+#joinNow{
+  background:linear-gradient(135deg,#00E5B0,#22D3EE);
+  color:#04110D;box-shadow:0 6px 24px rgba(0,229,176,.3);
+}
+#joinNow:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,229,176,.45)}
+#joinedBtn{
+  background:rgba(255,255,255,.05);color:#8e9baf;
+  border:1px solid rgba(255,255,255,.08);
+}
+#joinedBtn:hover{background:rgba(255,255,255,.08);color:#fff}
+@media(max-width:480px){
+  #tgCard{padding:24px 18px 20px;border-radius:20px}
+  #tgIcon{width:60px;height:60px}
+  #tgIcon svg{width:30px;height:30px}
+  #tgCard h2{font-size:1.2rem}
+  #tgCard p{font-size:.85rem;margin-bottom:18px}
+  .tgBtn{height:42px;font-size:.8rem}
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:768px){
+  .container{padding:0 16px}
+  .header{padding:16px 0}
+  .brand-mark{width:40px;height:40px;font-size:19px;border-radius:12px}
+  .brand-text h1{font-size:19px}
+  .brand-text p{font-size:11.5px}
+  .header-actions{gap:8px}
+  .live-pill,.clock{font-size:11.5px;padding:6px 10px}
+  .join-btn{padding:7px 12px;font-size:12px}
+  .join-btn span{display:none}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .card{padding:16px}
+  .section-title{margin-top:22px}
+}
+@media(max-width:480px){
+  .grid{grid-template-columns:1fr}
+  .crest{width:50px;height:50px}
+  .kickoff-time{font-size:18px}
+  .team-name{font-size:12.5px}
+  .card-body{gap:8px}
+  #status{top:8px;left:8px;font-size:10.5px;padding:5px 12px 5px 9px}
+  .fit-pill{font-size:9px;padding:2px 5px}
+  .sp-btn{padding:0 5px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+
+/* ============================================================
+   MANGO YELLOW → WHITE GRADIENT BUTTONS & BORDERS
+   ============================================================ */
+:root{
+  --accent:#FDBE02;
+  --accent-2:#FFFFFF;
+  --accent-gradient:linear-gradient(100deg,#FDBE02 0%,#FFFFFF 100%);
+  --accent-soft:rgba(253,190,2,.12);
+  --accent-glow:rgba(253,190,2,.25);
+  --border:#8B742F;
+  --border-2:#FFFFFF;
+}
+
+/* Main action buttons */
+.join-btn,
+#joinNow{
+  background:var(--accent-gradient)!important;
+  color:#17130A!important;
+  border:1px solid transparent!important;
+  box-shadow:0 4px 16px rgba(253,190,2,.22);
+}
+.join-btn:hover,#joinNow:hover{box-shadow:0 6px 22px rgba(253,190,2,.32)}
+
+/* Filter buttons: gradient outline, gradient fill when selected */
+.pill{
+  border:1px solid transparent!important;
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--accent-gradient) border-box!important;
+}
+.pill:hover,.pill.active{
+  background:var(--accent-gradient)!important;
+  color:#17130A!important;
+  border:1px solid transparent!important;
+}
+.pill.active .count,.pill .count{color:#17130A}
+.pill[data-tab="live"].active{color:#17130A!important;border-color:transparent!important}
+
+/* Player back button and stream selection buttons */
+.icon-btn,.stream-btn{
+  border:1px solid transparent!important;
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--accent-gradient) border-box!important;
+}
+.icon-btn:hover,.stream-btn:hover,.stream-btn.active{
+  border-color:transparent!important;
+  background:var(--accent-gradient)!important;
+  color:#17130A!important;
+}
+.stream-btn.active .type-badge{background:rgba(23,19,10,.12)!important;color:#17130A!important}
+
+/* Telegram popup secondary button with gradient border */
+#joinedBtn{
+  border:1px solid transparent!important;
+  background:linear-gradient(#121A2F,#121A2F) padding-box,var(--accent-gradient) border-box!important;
+  color:#FFFFFF!important;
+}
+#joinedBtn:hover{background:var(--accent-gradient)!important;color:#17130A!important}
+
+/* Shaka player control accents and button outlines */
+.sp-btn:focus-visible{outline:2px solid #FDBE02!important}
+.sp-btn.active{color:#FDBE02!important}
+.sp-fit-btn.mode-fill .fit-pill,
+.sp-fit-btn.mode-cover .fit-pill,
+.sp-fit-btn:hover .fit-pill{
+  border-color:#FDBE02!important;color:#FDBE02!important;
+}
+.shaka-settings-menu button.shaka-chosen-item,
+.shaka-settings-menu .shaka-back-to-overflow-button{color:#FDBE02!important}
+.shaka-play-button{filter:drop-shadow(0 4px 16px rgba(253,190,2,.35))!important}
+.shaka-video-container .shaka-range-element{accent-color:#FDBE02!important}
+
+</style></head>
+
+<body style="">
+
+<!-- ==================== TELEGRAM POPUP ==================== -->
+<div id="tgOverlay" class="">
+  <div id="tgCard">
+    <div id="tgIcon">
+      <svg viewBox="0 0 24 24" fill="white" width="36" height="36" aria-hidden="true">
+        <path d="M23.05 2.1L19.6 21.3c-.26 1.15-.94 1.43-1.9.9l-5.26-3.88-2.54 2.45c-.28.28-.52.52-1.06.52l.38-5.4L19.9 5.8c.46-.4-.1-.63-.72-.23L7.5 13.03l-5.24-1.64c-1.14-.36-1.16-1.14.24-1.68L21.6.9c.95-.36 1.78.23 1.45 1.2z"></path>
+      </svg>
+    </div>
+    <h2>Join Our Telegram</h2>
+    <p>Get match links &amp; live updates delivered straight to your phone.</p>
+    <div class="tgBtns">
+      <button class="tgBtn" id="joinedBtn">Already Joined</button>
+      <button class="tgBtn" id="joinNow">Join Now</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ==================== HUB VIEW ==================== -->
+  <section id="hubView" class="view">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark"><img src="https://mmg.whatsapp.net/m1/v/t24/AQNHutxjF4reRn3_K3hFSqpUScMnL8zpp1CPHdff5wkVgRdvjdLrwRTC_t8aLhDPRGe4b14_8z1t2pQ60QGZnNrSits7bH5W9cern7e4k4G6VVmosnxp_rUIJ8uD_7z-X2IzBoGjgWBsFhYeGd4rnwr8y0OXNtch?_nc_gid=IFXxdku8bhULymh201BIeg&_nc_oc=AdolB9Pxc4bpW3O8lzFL70i49CnOd6FwzMRfLxpbsvr91GeEpyIRajwKHrR6ZYV4Dag&ccb=10-5&oh=01_Q5Aa6AGozexwXglzFtAAFUTt5JMhx1Aq-S7_O3NffKOWbi2Vow&oe=6B18C9BD&_nc_sid=471a72" alt="MALAYALAMSPORTS"></div>
+        <div class="brand-text">
+          <h1>SJ STREAMS</h1>
+          <p>ENJOY LIVE</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="live-pill"><span class="dot"></span> Live</div>
+        <div class="clock" id="clock">Nov 5, 12:34 PM IST</div>
+        <a class="join-btn" href="https://www.whatsapp.com/channel/0029VbCQ4zz8F2pDiha9Io1H" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+          </svg>
+          <span>Join</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="filters">
+      <div class="filter-row" id="sports" role="tablist" aria-label="Sports"><button class="pill active" data-sport="All" role="tab">🏆 All<span class="count">63</span></button><button class="pill " data-sport="Cricket" role="tab">🏏 Cricket<span class="count">13</span></button><button class="pill " data-sport="Football" role="tab">⚽ Football<span class="count">45</span></button><button class="pill " data-sport="Motorsport" role="tab">🏎️ Motorsport<span class="count">2</span></button><button class="pill " data-sport="Boxing" role="tab">🥊 Boxing<span class="count">3</span></button></div>
+      <div class="filter-row" id="tabs" role="tablist" aria-label="Status"><button class="pill active" data-tab="all" role="tab">✅ All<span class="count">63</span></button><button class="pill " data-tab="live" role="tab">🔴 Live<span class="count">6</span></button><button class="pill " data-tab="soon" role="tab">📅 Upcoming<span class="count">57</span></button></div>
+    </div>
+
+    <main id="list" class="grid" aria-live="polite">
+    <button class="card is-live" data-watch-event="14074" type="button" aria-label="Bangladesh vs West Indies">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · ICC World Test Championship</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/187744/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bangladesh</div></div>
+        <div class="versus"><div class="kickoff-time">9:00 AM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>WI</span><img src="https://img.sofascore.com/api/v1/team/187760/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">West Indies</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">7 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card is-live" data-watch-event="14623" type="button" aria-label="Adelaide Strikers Women vs Brisbane Heat Women">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Women's Big Bash League</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>ASW</span><img src="https://img.sofascore.com/api/v1/team/274888/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Adelaide Strikers Women</div></div>
+        <div class="versus"><div class="kickoff-time">10:10 AM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>BHW</span><img src="https://img.sofascore.com/api/v1/team/274884/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Brisbane Heat Women</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">6 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card is-live" data-watch-event="14585" type="button" aria-label="Sri Lanka Under-19 vs Malaysia Under-19">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · U19 Asia Cup</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>SLU</span><img src="https://img.sofascore.com/api/v1/team/213106/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sri Lanka Under-19</div></div>
+        <div class="versus"><div class="kickoff-time">10:30 AM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>MU</span><img src="https://img.sofascore.com/api/v1/team/505670/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Malaysia Under-19</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">4 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card is-live" data-watch-event="14586" type="button" aria-label="Bangladesh Under-19 vs Afghanistan Under-19">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · U19 Asia Cup</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>BU</span><img src="https://img.sofascore.com/api/v1/team/213099/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bangladesh Under-19</div></div>
+        <div class="versus"><div class="kickoff-time">10:30 AM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>AU</span><img src="https://img.sofascore.com/api/v1/team/213103/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Afghanistan Under-19</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">4 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card is-live" data-watch-event="14072" type="button" aria-label="Afghanistan vs Zimbabwe">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Test Championship</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>A</span><img src="https://img.sofascore.com/api/v1/team/187575/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Afghanistan</div></div>
+        <div class="versus"><div class="kickoff-time">11:30 AM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>Z</span><img src="https://img.sofascore.com/api/v1/team/187745/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Zimbabwe</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">3 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card is-live" data-watch-event="14261" type="button" aria-label="NPL vs NPL">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Nepal Premier League T20</span></span>
+        <span class="status live">Live</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>N</span><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTo0kwOfn0swttbdChYr5KGVFVY-XuUO6nrYQ&amp;s" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">NPL</div></div>
+        <div class="versus"><div class="kickoff-time">12:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14624" type="button" aria-label="Sydney Thunder Women vs Perth Scorchers Women">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Women's Big Bash League</span></span>
+        <span class="status soon">in 1h 5m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>STW</span><img src="https://img.sofascore.com/api/v1/team/274889/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sydney Thunder Women</div></div>
+        <div class="versus"><div class="kickoff-time">1:40 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>PSW</span><img src="https://img.sofascore.com/api/v1/team/274890/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Perth Scorchers Women</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14583" type="button" aria-label="Pakistan vs India">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · SAFF Championship</span></span>
+        <span class="status soon">in 2h 25m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>P</span><img src="https://img.sofascore.com/api/v1/team/6081/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Pakistan</div></div>
+        <div class="versus"><div class="kickoff-time">3:00 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>I</span><img src="https://img.sofascore.com/api/v1/team/4828/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">India</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14661" type="button" aria-label="Kitchee SC vs Phnom Penh Crown">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 2h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>KS</span><img src="https://img.sofascore.com/api/v1/team/42199/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Kitchee SC</div></div>
+        <div class="versus"><div class="kickoff-time">3:30 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>PPC</span><img src="https://img.sofascore.com/api/v1/team/35605/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Phnom Penh Crown</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14662" type="button" aria-label="Lion City Sailors vs Adelaide United">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 2h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>LCS</span><img src="https://img.sofascore.com/api/v1/team/3041/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Lion City Sailors</div></div>
+        <div class="versus"><div class="kickoff-time">3:30 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>AU</span><img src="https://img.sofascore.com/api/v1/team/2946/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Adelaide United</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14663" type="button" aria-label="Machida Zelvia vs Shanghai Shenhua">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 2h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>MZ</span><img src="https://img.sofascore.com/api/v1/team/44409/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Machida Zelvia</div></div>
+        <div class="versus"><div class="kickoff-time">3:30 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>SS</span><img src="https://img.sofascore.com/api/v1/team/3373/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Shanghai Shenhua</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14664" type="button" aria-label="BG Pathum United vs Tai Po">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 5h 10m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>BPU</span><img src="https://img.sofascore.com/api/v1/team/35607/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">BG Pathum United</div></div>
+        <div class="versus"><div class="kickoff-time">5:45 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>TP</span><img src="https://img.sofascore.com/api/v1/team/40662/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Tai Po</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14665" type="button" aria-label="Kuching City vs Gangwon FC">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 5h 10m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>KC</span><img src="https://img.sofascore.com/api/v1/team/338334/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Kuching City</div></div>
+        <div class="versus"><div class="kickoff-time">5:45 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>GF</span><img src="https://img.sofascore.com/api/v1/team/34220/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Gangwon FC</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14666" type="button" aria-label="Preah Khan Reach Svay Rieng FC vs Tampines Rovers">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · AFC Champions League Two</span></span>
+        <span class="status soon">in 5h 10m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>PKR</span><img src="https://img.sofascore.com/api/v1/team/153474/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Preah Khan Reach Svay Rieng FC</div></div>
+        <div class="versus"><div class="kickoff-time">5:45 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>TR</span><img src="https://img.sofascore.com/api/v1/team/3043/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Tampines Rovers</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14584" type="button" aria-label="Bhutan vs Bangladesh">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · SAFF Championship</span></span>
+        <span class="status soon">in 6h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/191564/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bhutan</div></div>
+        <div class="versus"><div class="kickoff-time">7:30 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/6080/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bangladesh</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14626" type="button" aria-label="AC Milan vs Ferencváros TC">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>AM</span><img src="https://img.sofascore.com/api/v1/team/2692/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AC Milan</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>FT</span><img src="https://img.sofascore.com/api/v1/team/1925/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Ferencváros TC</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14627" type="button" aria-label="RSC Anderlecht vs Red Bull Salzburg">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>RA</span><img src="https://img.sofascore.com/api/v1/team/2900/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">RSC Anderlecht</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>RBS</span><img src="https://img.sofascore.com/api/v1/team/2046/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Red Bull Salzburg</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14628" type="button" aria-label="Crystal Palace vs TSG Hoffenheim">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>CP</span><img src="https://img.sofascore.com/api/v1/team/7/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Crystal Palace</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>TH</span><img src="https://img.sofascore.com/api/v1/team/2569/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">TSG Hoffenheim</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14629" type="button" aria-label="Levski Sofia vs Jagiellonia Białystok">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>LS</span><img src="https://img.sofascore.com/api/v1/team/3273/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Levski Sofia</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>JB</span><img src="https://img.sofascore.com/api/v1/team/7691/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Jagiellonia Białystok</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14630" type="button" aria-label="Lillestrøm SK vs FC Viktoria Plzeň">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>LS</span><img src="https://img.sofascore.com/api/v1/team/664/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Lillestrøm SK</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>FVP</span><img src="https://img.sofascore.com/api/v1/team/4502/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Viktoria Plzeň</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14631" type="button" aria-label="NEC Nijmegen vs Omonia Nicosia">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>NN</span><img src="https://img.sofascore.com/api/v1/team/2962/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">NEC Nijmegen</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>ON</span><img src="https://img.sofascore.com/api/v1/team/3395/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Omonia Nicosia</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14632" type="button" aria-label="Real Sociedad vs Olympique Lyonnais">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>RS</span><img src="https://img.sofascore.com/api/v1/team/2824/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Real Sociedad</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>OL</span><img src="https://img.sofascore.com/api/v1/team/1649/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Olympique Lyonnais</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14633" type="button" aria-label="AC Sparta Praha vs Bournemouth">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>ASP</span><img src="https://img.sofascore.com/api/v1/team/2218/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AC Sparta Praha</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/60/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bournemouth</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14643" type="button" aria-label="AGF vs Sporting Braga">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>A</span><img src="https://img.sofascore.com/api/v1/team/1291/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AGF</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>SB</span><img src="https://img.sofascore.com/api/v1/team/2999/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sporting Braga</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14644" type="button" aria-label="Atalanta vs FC Kairat Almaty">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>A</span><img src="https://img.sofascore.com/api/v1/team/2686/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Atalanta</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>FKA</span><img src="https://img.sofascore.com/api/v1/team/5172/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Kairat Almaty</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14645" type="button" aria-label="FC Midtjylland vs AFC Ajax">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FM</span><img src="https://img.sofascore.com/api/v1/team/1289/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Midtjylland</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>AA</span><img src="https://img.sofascore.com/api/v1/team/2953/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AFC Ajax</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14646" type="button" aria-label="FK Crvena zvezda vs Inter Club d'Escaldes">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FCZ</span><img src="https://img.sofascore.com/api/v1/team/5149/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FK Crvena zvezda</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>ICD</span><img src="https://img.sofascore.com/api/v1/team/37946/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Inter Club d'Escaldes</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14647" type="button" aria-label="Kuopion Palloseura vs KAA Gent">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>KP</span><img src="https://img.sofascore.com/api/v1/team/2244/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Kuopion Palloseura</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>KG</span><img src="https://img.sofascore.com/api/v1/team/2903/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">KAA Gent</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14648" type="button" aria-label="Lincoln Red Imps vs HNK Hajduk Split">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>LRI</span><img src="https://img.sofascore.com/api/v1/team/126304/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Lincoln Red Imps</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>HHS</span><img src="https://img.sofascore.com/api/v1/team/2036/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">HNK Hajduk Split</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14649" type="button" aria-label="Mjällby AIF vs FK Borac Banja Luka">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>MA</span><img src="https://img.sofascore.com/api/v1/team/1783/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Mjällby AIF</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>FBB</span><img src="https://img.sofascore.com/api/v1/team/5235/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FK Borac Banja Luka</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14650" type="button" aria-label="FC Thun vs Heart of Midlothian">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FT</span><img src="https://img.sofascore.com/api/v1/team/2454/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Thun</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>HOM</span><img src="https://img.sofascore.com/api/v1/team/2353/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Heart of Midlothian</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14651" type="button" aria-label="Trabzonspor vs SC Freiburg">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 10h 40m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>T</span><img src="https://img.sofascore.com/api/v1/team/3051/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Trabzonspor</div></div>
+        <div class="versus"><div class="kickoff-time">11:15 PM</div><div class="kickoff-date">Nov 5 · IST</div></div>
+        <div class="team"><div class="crest"><span>SF</span><img src="https://img.sofascore.com/api/v1/team/2538/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">SC Freiburg</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14634" type="button" aria-label="AZ Alkmaar vs Juventus">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>AA</span><img src="https://img.sofascore.com/api/v1/team/2950/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AZ Alkmaar</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>J</span><img src="https://img.sofascore.com/api/v1/team/2687/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Juventus</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14635" type="button" aria-label="Bayer 04 Leverkusen vs Olympique de Marseille">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>B0L</span><img src="https://img.sofascore.com/api/v1/team/2681/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bayer 04 Leverkusen</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>ODM</span><img src="https://img.sofascore.com/api/v1/team/1641/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Olympique de Marseille</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14636" type="button" aria-label="Benfica vs Lech Poznań">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/3006/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Benfica</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>LP</span><img src="https://img.sofascore.com/api/v1/team/3121/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Lech Poznań</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14637" type="button" aria-label="Celta Vigo vs Royale Union Saint-Gilloise">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>CV</span><img src="https://img.sofascore.com/api/v1/team/2821/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Celta Vigo</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>RUS</span><img src="https://img.sofascore.com/api/v1/team/4860/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Royale Union Saint-Gilloise</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14638" type="button" aria-label="Hapoel Be'er Sheva vs OFI Crete">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>HBS</span><img src="https://img.sofascore.com/api/v1/team/5202/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Hapoel Be'er Sheva</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>OC</span><img src="https://img.sofascore.com/api/v1/team/3241/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">OFI Crete</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14639" type="button" aria-label="Celtic vs Beşiktaş JK">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>C</span><img src="https://img.sofascore.com/api/v1/team/2352/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Celtic</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>BJ</span><img src="https://img.sofascore.com/api/v1/team/3050/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Beşiktaş JK</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14640" type="button" aria-label="SK Sturm Graz vs NK Celje">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>SSG</span><img src="https://img.sofascore.com/api/v1/team/2051/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">SK Sturm Graz</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>NC</span><img src="https://img.sofascore.com/api/v1/team/2413/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">NK Celje</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14641" type="button" aria-label="Sunderland vs GNK Dinamo Zagreb">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>S</span><img src="https://img.sofascore.com/api/v1/team/41/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sunderland</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>GDZ</span><img src="https://img.sofascore.com/api/v1/team/2032/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">GNK Dinamo Zagreb</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14642" type="button" aria-label="Torreense vs FC Ararat-Armenia">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Europa League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>T</span><img src="https://img.sofascore.com/api/v1/team/25787/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Torreense</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>FA</span><img src="https://img.sofascore.com/api/v1/team/262229/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Ararat-Armenia</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14652" type="button" aria-label="FC København vs FC Iberia 1999">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FK</span><img src="https://img.sofascore.com/api/v1/team/1284/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC København</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>FI1</span><img src="https://img.sofascore.com/api/v1/team/116312/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Iberia 1999</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14653" type="button" aria-label="FC Twente vs Pafos FC">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FT</span><img src="https://img.sofascore.com/api/v1/team/2955/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Twente</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>PF</span><img src="https://img.sofascore.com/api/v1/team/171626/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Pafos FC</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14654" type="button" aria-label="Getafe vs Brighton &amp; Hove Albion">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>G</span><img src="https://img.sofascore.com/api/v1/team/2859/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Getafe</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>BHA</span><img src="https://img.sofascore.com/api/v1/team/30/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Brighton &amp; Hove Albion</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14655" type="button" aria-label="FC Lugano vs FK Kauno Žalgiris">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>FL</span><img src="https://img.sofascore.com/api/v1/team/2443/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Lugano</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>FKA</span><img src="https://img.sofascore.com/api/v1/team/80741/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FK Kauno Žalgiris</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14656" type="button" aria-label="AS Monaco vs FC Nordsjælland">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>AM</span><img src="https://img.sofascore.com/api/v1/team/1653/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">AS Monaco</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>FN</span><img src="https://img.sofascore.com/api/v1/team/1292/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FC Nordsjælland</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14657" type="button" aria-label="Panathinaikos FC vs CSKA Sofia">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>PF</span><img src="https://img.sofascore.com/api/v1/team/3248/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Panathinaikos FC</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>CS</span><img src="https://img.sofascore.com/api/v1/team/3275/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">CSKA Sofia</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14658" type="button" aria-label="Riga FC vs FK Jablonec">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>RF</span><img src="https://img.sofascore.com/api/v1/team/162368/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Riga FC</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>FJ</span><img src="https://img.sofascore.com/api/v1/team/2205/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">FK Jablonec</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14659" type="button" aria-label="Sint-Truidense VV vs SK Brann">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>SV</span><img src="https://img.sofascore.com/api/v1/team/2895/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sint-Truidense VV</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>SB</span><img src="https://img.sofascore.com/api/v1/team/1159/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">SK Brann</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14660" type="button" aria-label="Universitatea Craiova vs KF Egnatia">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · UEFA Conference League</span></span>
+        <span class="status soon">in 12h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>UC</span><img src="https://img.sofascore.com/api/v1/team/116223/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Universitatea Craiova</div></div>
+        <div class="versus"><div class="kickoff-time">1:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>KE</span><img src="https://img.sofascore.com/api/v1/team/264619/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">KF Egnatia</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14667" type="button" aria-label="Palmeiras vs Remo">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · Campeonato Brasileiro Série A</span></span>
+        <span class="status soon">in 15h 25m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>P</span><img src="https://img.sofascore.com/api/v1/team/1963/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Palmeiras</div></div>
+        <div class="versus"><div class="kickoff-time">4:00 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>R</span><img src="https://img.sofascore.com/api/v1/team/2012/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Remo</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14668" type="button" aria-label="Cruzeiro vs Bahia">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">⚽</span><span class="name">Football · Campeonato Brasileiro Série A</span></span>
+        <span class="status soon">in 17h 25m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>C</span><img src="https://img.sofascore.com/api/v1/team/1954/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Cruzeiro</div></div>
+        <div class="versus"><div class="kickoff-time">6:00 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>B</span><img src="https://img.sofascore.com/api/v1/team/1955/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Bahia</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14587" type="button" aria-label="Pakistan Under-19 vs United Arab Emirates Under-19">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · U19 Asia Cup</span></span>
+        <span class="status soon">in 21h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>PU</span><img src="https://img.sofascore.com/api/v1/team/213104/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Pakistan Under-19</div></div>
+        <div class="versus"><div class="kickoff-time">10:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>UAE</span><img src="https://img.sofascore.com/api/v1/team/300266/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">United Arab Emirates Under-19</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14588" type="button" aria-label="India Under-19 vs Nepal Under-19">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · U19 Asia Cup</span></span>
+        <span class="status soon">in 21h 55m</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>IU</span><img src="https://img.sofascore.com/api/v1/team/213112/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">India Under-19</div></div>
+        <div class="versus"><div class="kickoff-time">10:30 AM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>NU</span><img src="https://img.sofascore.com/api/v1/team/213113/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Nepal Under-19</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14625" type="button" aria-label="Melbourne Stars Women vs Sydney Sixers Women">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Women's Big Bash League</span></span>
+        <span class="status soon">in 1d 1h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>MSW</span><img src="https://img.sofascore.com/api/v1/team/274886/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Melbourne Stars Women</div></div>
+        <div class="versus"><div class="kickoff-time">1:40 PM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"><div class="crest"><span>SSW</span><img src="https://img.sofascore.com/api/v1/team/274883/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sydney Sixers Women</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="866" type="button" aria-label="MotoGP vs MotoGP">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏎️</span><span class="name">Motorsport · MotoGP</span></span>
+        <span class="status soon">in 1d 5h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>M</span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhHudrhyphenhyphenOGNuEpCmd8k8vfTaJ7hTqEb6GemloDedieYFrvM5MJz639vioDvQnlHGBhvxsNBHSLg2ICSGot7LWGA2PDZqoc3W_A3Yu002I5JGUeQgTCG_UFhDRPSJr2E1blnBokZvTYkB6B2nJVeeUy6s28sW-XHRZzCW_J6SOGpaoXx0LB-CH-9iTf1ebc/s1600/1000009837.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">MotoGP</div></div>
+        <div class="versus"><div class="kickoff-time">6:15 PM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">6 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="591" type="button" aria-label="Formula 1 vs Formula 1">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏎️</span><span class="name">Motorsport · Formula 1</span></span>
+        <span class="status soon">in 1d 8h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>F1</span><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6U1hs_95YIb02AiDL1JAgkqMNrA1SkPMUatqqPsO2ZqtNZdmj79TQ71k&amp;s=10" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Formula 1</div></div>
+        <div class="versus"><div class="kickoff-time">9:00 PM</div><div class="kickoff-date">Nov 6 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="1089" type="button" aria-label="SmackDown vs SmackDown">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🥊</span><span class="name">Boxing · Friday Night SmackDown</span></span>
+        <span class="status soon">in 1d 16h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>S</span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhzZP7kZVz8XPUsapkhsNd-oO8yjHbAA2NXMRuEDPXZteAJRwIeIAUQo5U_6QA4mhPqXAeR5YPVY-Yu5hBVZcOIfWUUFvewgaC2bFmrSLu10iQgvBiLpB0vxEWz320Par_JDjKzTdCYYTcsA4dLb-TjD1fsXvMwGsb6XahN-Pq2ZsexcSsBITIxzXFRYEM/s1600/1000009833.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">SmackDown</div></div>
+        <div class="versus"><div class="kickoff-time">5:30 AM</div><div class="kickoff-date">Nov 7 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14009" type="button" aria-label="New Zealand vs India">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · One Day International</span></span>
+        <span class="status soon">in 1d 18h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>NZ</span><img src="https://img.sofascore.com/api/v1/team/187755/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">New Zealand</div></div>
+        <div class="versus"><div class="kickoff-time">7:30 AM</div><div class="kickoff-date">Nov 7 · IST</div></div>
+        <div class="team"><div class="crest"><span>I</span><img src="https://img.sofascore.com/api/v1/team/187765/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">India</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">10 streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14622" type="button" aria-label="Abu Dhabi T10 vs Abu Dhabi T10">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · Abu Dhabi T10 League</span></span>
+        <span class="status soon">in 2d 4h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>ADT</span><img src="https://img.sofascore.com/api/v1/unique-tournament/18292/image/dark" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Abu Dhabi T10</div></div>
+        <div class="versus"><div class="kickoff-time">5:00 PM</div><div class="kickoff-date">Nov 7 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="8963" type="button" aria-label="G. Bonfim vs S. Brady">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🥊</span><span class="name">Boxing · UFC</span></span>
+        <span class="status soon">in 2d 14h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>GB</span><img src="https://img.sofascore.com/api/v1/team/472216/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">G. Bonfim</div></div>
+        <div class="versus"><div class="kickoff-time">3:30 AM</div><div class="kickoff-date">Nov 8 · IST</div></div>
+        <div class="team"><div class="crest"><span>SB</span><img src="https://img.sofascore.com/api/v1/team/461773/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">S. Brady</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="14559" type="button" aria-label="Pakistan vs Sri Lanka">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🏏</span><span class="name">Cricket · ICC World Test Championship</span></span>
+        <span class="status soon">in 3d 21h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>P</span><img src="https://img.sofascore.com/api/v1/team/187754/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Pakistan</div></div>
+        <div class="versus"><div class="kickoff-time">10:30 AM</div><div class="kickoff-date">Nov 9 · IST</div></div>
+        <div class="team"><div class="crest"><span>SL</span><img src="https://img.sofascore.com/api/v1/team/187756/image" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">Sri Lanka</div></div>
+      </div>
+      <div class="card-foot"><span class="stream-count">1 stream</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  
+    <button class="card " data-watch-event="1090" type="button" aria-label="WWE RAW vs WWE RAW">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">🥊</span><span class="name">Boxing · Monday Night RAW</span></span>
+        <span class="status soon">in 4d 16h</span>
+      </div>
+      <div class="card-body">
+        <div class="team"><div class="crest"><span>WR</span><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiFW9zq6aPTeuXAbR_LN5vEH39CQlgUwbf9htaAx9-D4oupUZ-ocumYl3T_Kkp6Crzq1rUzGf83Ps4jnJzkLD6XlNh1CW9WjsgdhneuImqgaPDw7UekEqax_YdnYynNmyfmWTxVZ599JunK1yoA5ErRmJBe0fCos9fHoNwIYmOAwgenJizk5e0nhHHPnkM/s1600/20250317_175451.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div><div class="team-name">WWE RAW</div></div>
+        <div class="versus"><div class="kickoff-time">5:30 AM</div><div class="kickoff-date">Nov 10 · IST</div></div>
+        <div class="team"></div>
+      </div>
+      <div class="card-foot"><span class="stream-count empty">No streams</span><span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  </main>
+  </section>
+
+  <!-- ==================== PLAYER VIEW ==================== -->
+  <section id="playerView" class="view active">
+    <header class="player-top">
+      <button class="icon-btn" id="backHub" aria-label="Back to matches">←</button>
+      <div class="player-meta">
+        <h2 class="player-title" id="playerTitle">Adelaide Strikers Women vs Brisbane Heat Women</h2>
+        <p class="player-sub" id="playerSub">Cricket · Women's Big Bash League</p>
+      </div>
+    </header>
+
+    <div class="screen">
+      <div id="player-container" data-shaka-player-container="" shaka-controls="true" class="shaka-video-container no-cursor"><video id="shaka-video" playsinline="" webkit-playsinline="" preload="none" autoplay="" class="shaka-video"><source src="blob:https://footlinks.pages.dev/bbf86e56-7d0f-4605-952f-936019a5fcd2" type=""></video><div id="status" class="live"><span class="st-dot"></span><span>Live</span></div><div class="loading-overlay" hidden=""><svg width="34" height="34" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="#1a1a1a" stroke-width="4"></circle><path d="M20 4a16 16 0 0 1 16 16" stroke="#00E5B0" stroke-width="4" stroke-linecap="round"></path></svg><p>Loading stream…</p></div><div class="shaka-controls-container"><div class="shaka-scrim-container"></div><div class="shaka-top-controls shaka-no-propagation"><div class="shaka-controls-top-button-panel shaka-show-controls-on-mouse-over shaka-tooltips-on shaka-tooltips-bottom"><div class="shaka-content-title" role="heading" aria-level="2"></div><div class="shaka-spacer" aria-hidden="true"></div></div></div><div class="shaka-bottom-controls shaka-no-propagation"><div class="shaka-ad-controls shaka-hidden"><div class="shaka-skip-ad-container"><div class="shaka-skip-ad-counter shaka-hidden"></div><button type="button" class="shaka-skip-ad-button shaka-hidden shaka-no-propagation" disabled="" aria-label="Skip Ad">Skip Ad</button></div></div><div class="shaka-range-container shaka-seek-bar-container" style="background: linear-gradient(to right, rgb(31, 199, 255) 87.4475%, rgb(31, 199, 255) 87.4475%, rgb(31, 199, 255) 92.4186%, rgb(255, 195, 54) 92.4186%, rgb(255, 195, 54) 96.1912%, rgb(130, 130, 130) 96.1912%);"><div class="shaka-chapter-markers"></div><div class="shaka-ad-markers"></div><input class="shaka-range-element shaka-seek-bar shaka-no-propagation shaka-show-controls-on-mouse-over" type="range" step="any" min="19110.6210000515" max="19407.6210000515" aria-label="Seek" disabled=""><div class="shaka-player-ui-thumbnail-container" style="left: 173.262px; visibility: hidden;"><div class="shaka-player-ui-thumbnail-image-container" style="display: none;"><img class="shaka-player-ui-thumbnail-image" draggable="false"></div><div class="shaka-player-ui-thumbnail-time-container"><div class="shaka-player-ui-thumbnail-time">-3:40</div></div></div></div><div class="shaka-controls-button-panel shaka-show-controls-on-mouse-over shaka-tooltips-on" role="toolbar"><button type="button" class="shaka-play-button shaka-tooltip shaka-no-propagation" aria-label="Pause"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M640-200q-33 0-56-24T560-280v-400q0-33 24-56T640-760q33 0 56 24T720-680v400q0 33-24 56T640-200Zm-320 0q-33 0-56-24T240-280v-400q0-33 24-56T320-760q33 0 56 24T400-680v400q0 33-24 56T320-200Z"></path></svg></button><button type="button" class="shaka-mute-button shaka-tooltip shaka-no-propagation" aria-pressed="true" aria-label="Unmute"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M671-177q-11 7-22 13t-23 11q-15 7-30 0T574-176q-6-15 2-30T598-227q4-2 8-4t8-4L480-368v111q0 27-24 38T412-228L280-360H160q-17 0-28-12T120-400v-160q0-17 12-28T160-600h88L84-764q-11-11-11-28t11-28q11-11 28-11t28 11l680 680q11 11 11 28t-11 28q-11 11-28 11t-28-11l-93-93Zm89-304q0-83-44-152T598-735q-15-7-22-22t-2-30q6-16 22-23t32 0q97 43 155 131t58 197q0 33-6 66T817-353q-8 22-24 28t-30 0q-14-5-22-18t0-30q11-26 16-52t5-56ZM591-623q33 21 51 63t18 80v10q0 5-1 10-2 13-14 17t-22-6l-51-51q-6-6-9-14t-3-16v-77q0-12 10-18t20 0Zm-201-59q-6-6-6-14t6-14l22-22q19-19 44-8T480-703v63q0 14-12 19t-22-5l-56-56Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only"><span>Unmute</span><span class="shaka-current-selection-span"></span></label></button><div class="shaka-range-container shaka-volume-bar-container shaka-volume-bar-container-allow-hiding" style="background: linear-gradient(to right, rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0.54) 0%, rgba(255, 255, 255, 0.54) 100%);"><input class="shaka-range-element shaka-volume-bar" type="range" step="any" min="0" max="100" aria-label="Volume" disabled=""></div><button type="button" class="shaka-current-time" aria-label="Skip ahead to live">- 0:22</button><button type="button" class="shaka-ad-info" disabled=""></button><div class="shaka-spacer" aria-hidden="true"></div><button type="button" class="shaka-pip-button shaka-tooltip shaka-no-propagation" aria-pressed="false" aria-label="Enter Picture-in-Picture"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M120-520q-17 0-28-12T80-560q0-17 12-28T120-600h104L80-743q-12-12-12-28T80-800q12-12 28-12t28 12l143 144v-104q0-17 12-28T320-800q17 0 28 12T360-760v200q0 17-12 28T320-520H120Zm40 360q-33 0-56-24T80-240v-160q0-17 12-28T120-440q17 0 28 12T160-400v160h280q17 0 28 12T480-200q0 17-12 28T440-160H160Zm680-280q-17 0-28-12T800-480v-240H480q-17 0-28-12T440-760q0-17 12-28T480-800h320q33 0 56 24T880-720v240q0 17-12 28T840-440ZM600-160q-17 0-28-12T560-200v-120q0-17 12-28T600-360h240q17 0 28 12T880-320v120q0 17-12 28T840-160H600Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-simple-overflow-button-label-inline"><span>Picture-in-Picture</span><span class="shaka-current-selection-span">Off</span></label></button><button class="sp-btn sp-fit-btn" title="Video Fit: Fit" aria-label="Cycle Video Fit Mode"><span class="fit-pill">16:9</span></button><button type="button" class="shaka-fullscreen-button shaka-tooltip shaka-no-propagation" aria-label="Full screen" aria-pressed="false"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M200-200h80q17 0 28 12T320-160q0 17-12 28T280-120H160q-17 0-28-12T120-160v-120q0-17 12-28T160-320q17 0 28 12T200-280v80Zm560 0v-80q0-17 12-28T800-320q17 0 28 12T840-280v120q0 17-12 28T800-120H680q-17 0-28-12T640-160q0-17 12-28T680-200h80ZM200-760v80q0 17-12 28T160-640q-17 0-28-12T120-680v-120q0-17 12-28T160-840h120q17 0 28 12T320-800q0 17-12 28T280-760h-80Zm560 0h-80q-17 0-28-12T640-800q0-17 12-28T680-840h120q17 0 28 12T840-800v120q0 17-12 28T800-640q-17 0-28-12T760-680v-80Z"></path></svg></button><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-menu-button shaka-no-propagation shaka-tooltip" aria-label="More settings"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M433-80q-27 0-46-18T363-142l-9-66q-13-5-24-12T307-235l-62 26q-25 11-50 2t-39-32l-47-82q-14-23-8-49t27-43l53-40q-1-7-1-14v-27q0-6 1-14l-53-40q-21-17-27-43t8-49l47-82q14-23 39-32t50 2l62 26q11-8 23-15t24-12l9-66q4-26 24-44t46-18h94q27 0 46 18t24 44l9 66q13 5 24 12t22 15l62-26q25-11 50-2t39 32l47 82q14 23 8 49t-27 43l-53 40q1 7 1 14v27q0 6-2 14l53 40q21 17 27 43t-8 49l-48 82q-14 23-39 32t-50-2l-60-26q-11 8-23 15t-24 12l-9 66q-4 26-24 44T527-80h-94Zm49-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-100 41T342-480q0 58 40 99t100 41Z"></path></svg><span class="shaka-overflow-quality-mark" style="">HD</span></button></div></div><div class="shaka-overflow-menu shaka-no-propagation shaka-show-controls-on-mouse-over shaka-hidden" role="menu" style="right: 15px; left: auto;"><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-caption-button shaka-tooltip-status shaka-hidden" aria-pressed="false" aria-label="Captions" shaka-status="Off"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M791-57 687-160H200q-33 0-56-24T120-240v-487l-65-65q-12-12-12-28T55-849q12-12 28-12t28 12l736 736q12 12 12 28t-12 28q-12 12-28 12T791-57ZM280-360h120q17 0 28-12T440-400v-25q0-8-6-14t-14-6h-20q-8 0-14 6t-6 14v5h-80v-127l-45-45v1q-7 5-11 13t-4 18v160q0 17 12 28T280-360Zm560-360v388q0 27-24 38T772-303l-66-66q7-5 10-14T720-400v-20q0-8-6-14t-14-6h-20q-8 0-14 6t-6 14h-5l-75-75v-45h80v5q0 8 6 14t14 6h20q8 0 14-6t6-14v-25q0-17-12-28T680-600H560q-17 0-28 12T520-560v5L343-732q-19-19-8-44T372-800h388q33 0 56 24T840-720Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Captions</span><span class="shaka-current-selection-span">Off</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-text-languages" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Captions</span></button><button type="button" class="shaka-turn-captions-off-button" role="menuitemradio" aria-checked="true"><span class="shaka-chosen-item">Off</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-caption-position-button shaka-tooltip shaka-hidden" aria-label="Subtitle position" aria-pressed="false"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M160-240v-480 480Zm160-240v-80h-80v80h80Zm108 0q11-23 26-43t32-37h-86v80h28Zm-24 160q-2-10-2-20T401-360q0-11 0-20T404-400H240v80h164Zm81 160H160q-33 0-56-24T80-240v-480q0-33 24-56T160-800h640q33 0 56 24T880-720v166q-17-18-37-32T800-612v-108H160v480h268q11 23 25 43t32 37Zm235 0h-80l-12-60q-12-5-22-10T584-244l-58 18-40-68 46-40q-2-13-2-26t2-26l-46-40 40-68 58 18q11-8 22-14T628-500l12-60h80l12 60q12 5 23 12t21 14l58-20 40 70-46 40q2 13 2 25t-2 25l46 40-40 68-58-18q-11 8-22 14T732-220l-12 60Zm-40-120q33 0 56-24T760-360q0-33-24-56T680-440q-33 0-56 24T600-360q0 33 24 56T680-280Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Subtitle position</span><span class="shaka-current-selection-span">Default</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-text-positions" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Subtitle position</span></button><button type="button" role="menuitemradio" aria-checked="true"><span class="shaka-chosen-item">Default</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top right</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center right</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom right</span></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-resolution-button shaka-tooltip-status" shaka-status="Auto" aria-label="Resolution"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M480-120q-17 0-28-12T440-160v-160q0-17 12-28T480-360q17 0 28 12T520-320v40h280q17 0 28 12T840-240q0 17-12 28T800-200H520v40q0 17-12 28T480-120Zm-320-80q-17 0-28-12T120-240q0-17 12-28T160-280h160q17 0 28 12T360-240q0 17-12 28T320-200H160Zm160-160q-17 0-28-12T280-400v-40H160q-17 0-28-12T120-480q0-17 12-28T160-520h120v-40q0-17 12-28T320-600q17 0 28 12T360-560v160q0 17-12 28T320-360Zm160-80q-17 0-28-12T440-480q0-17 12-28T480-520h320q17 0 28 12T840-480q0 17-12 28T800-440H480Zm160-160q-17 0-28-12T600-640v-160q0-17 12-28T640-840q17 0 28 12T680-800v40h120q17 0 28 12T840-720q0 17-12 28T800-680H680v40q0 17-12 28T640-600Zm-480-80q-17 0-28-12T120-720q0-17 12-28T160-760h320q17 0 28 12T520-720q0 17-12 28T480-680H160Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Resolution</span><span><span class="shaka-current-selection-span">Auto</span><span class="shaka-current-auto-quality" style="">1080p</span><sup class="shaka-current-quality-mark" style="">HD</sup></span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-resolutions" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Resolution</span></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>1080p</span><sup class="shaka-quality-mark">HD</sup></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>720p (4.2 Mbps)</span></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>720p (2.1 Mbps)</span></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>576p</span></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>540p</span></button><button type="button" role="menuitemradio" aria-checked="false" class="explicit-resolution"><span>396p</span></button><button type="button" role="menuitemradio" aria-checked="true" class="shaka-enable-abr-button"><span class="shaka-chosen-item">Auto</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-playbackrate-button shaka-tooltip-status shaka-hidden" aria-label="Video type"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56-24T240-320v-480q0-33 24-56T320-880h480q33 0 56 24T880-800v480q0 33-24 56T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56-24T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Video type</span><span class="shaka-current-selection-span"></span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-video-type" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Video type</span></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-language-button shaka-tooltip-status shaka-hidden" aria-label="Language" shaka-status="English"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M480-80q-82 0-155-32t-128-86Q143-252 112-325T80-480q0-83 32-156t86-127Q252-817 325-848T480-880q83 0 156 32t127 86q54 54 86 127T880-480q0 82-32 155t-86 128q-54 54-127 86T480-80Zm0-82q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-32-68T322-320H204q29 50 72 87t100 55Zm208 0q56-18 100-55t72-87H638q-9 38-22 74T584-178ZM170-400h136q-3-20-4-40T300-480q0-21 2-40T306-560H170q-5 20-8 40T160-480q0 21 2 40T170-400Zm216 0h188q3-20 4-40T580-480q0-21-2-40T574-560H386q-3 20-4 40T380-480q0 21 2 40T386-400Zm268 0h136q5-20 8-40T800-480q0-21-2-40T790-560H654q3 20 4 40T660-480q0 21-2 40T654-400Zm-16-240h118q-29-50-72-87T584-782q18 33 32 68T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22-74T376-782q-56 18-100 55T204-640Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Language</span><span class="shaka-current-selection-span">English</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-audio-languages" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Language</span></button><button type="button" role="menuitemradio" aria-checked="true"><span class="shaka-chosen-item">English</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-chapter-button shaka-tooltip-status shaka-hidden" aria-label="Chapters"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m400-200-182 91q-20 10-39-2T160-145v-495q0-33 24-56T240-720h320q33 0 56 24T640-640v495q0 23-19 34t-39 2l-182-91Zm360-40q-17 0-28-12T720-280v-520H320q-17 0-28-12T280-840q0-17 12-28T320-880h400q33 0 56 24T800-800v520q0 17-12 28T760-240Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Chapters</span><span class="shaka-current-selection-span"></span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-chapters" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Chapters</span></button></div><button type="button" class="shaka-pip-button shaka-tooltip shaka-no-propagation" aria-pressed="false" aria-label="Enter Picture-in-Picture"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M120-520q-17 0-28-12T80-560q0-17 12-28T120-600h104L80-743q-12-12-12-28T80-800q12-12 28-12t28 12l143 144v-104q0-17 12-28T320-800q17 0 28 12T360-760v200q0 17-12 28T320-520H120Zm40 360q-33 0-56-24T80-240v-160q0-17 12-28T120-440q17 0 28 12T160-400v160h280q17 0 28 12T480-200q0 17-12 28T440-160H160Zm680-280q-17 0-28-12T800-480v-240H480q-17 0-28-12T440-760q0-17 12-28T480-800h320q33 0 56 24T880-720v240q0 17-12 28T840-440ZM600-160q-17 0-28-12T560-200v-120q0-17 12-28T600-360h240q17 0 28 12T880-320v120q0 17-12 28T840-160H600Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-simple-overflow-button-label-inline"><span>Picture-in-Picture</span><span class="shaka-current-selection-span">Off</span></label></button><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-playbackrate-button shaka-tooltip-status" aria-label="Playback speed" shaka-status="1x"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m426-330 195-125q14-9 14-25t-14-25L426-630q-15-10-30-2T380-605v250q0 18 16 26T426-330ZM121-440q17 0 30 11t18 28q6 23 14 44T204-317q9 15 8 32T198-256q-11 11-27 10t-25-14q-22-31-37-66T86-400q-3-16 8-28t28-12Zm77-264q12 12 13 29t-7 31q-11 20-20 41T170-559q-5 17-18 28T121-520q-17 0-28-12T87-561q8-38 23-74t36-66q9-13 25-14t27 10Zm56 505q12-13 30-14t32 8q20 11 40 20t42 15q17 5 28 18t11 30q0 17-12 27T397-88q-38-8-72-23T260-146q-14-9-16-25t10-28Zm186-639q0 17-10 30T402-790q-23 6-44 14T317-755q-15 9-32 8T255-761q-12-12-10-28T260-815q32-20 66-34T399-872q16-3 28 7t12 27Zm360 358q0-113-70-200T553-792q-15-4-24-17t-9-29q0-16 11-26t25-8q140 28 232 137t92 255q0 146-92 255T556-88q-14 3-25-8T520-122q0-16 9-29t24-17q108-26 178-112T800-480Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Playback speed</span><span class="shaka-current-selection-span">1x</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-playback-rates" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Playback speed</span></button><div class="shaka-playback-rate-slider-section"><div class="shaka-playback-rate-value">1.00x</div><div class="shaka-playback-rate-slider-row"><button type="button" class="shaka-playback-rate-step-btn shaka-no-propagation" aria-label="−">−</button><div class="shaka-range-container shaka-playback-rate-slider-container shaka-no-propagation" style="background: linear-gradient(to right, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 20%, rgba(255, 255, 255, 0.54) 20%, rgba(255, 255, 255, 0.54) 100%);"><input class="shaka-range-element shaka-playback-rate-slider" type="range" step="0.05" min="0.5" max="3" disabled=""></div><button type="button" class="shaka-playback-rate-step-btn shaka-no-propagation" aria-label="+">+</button></div></div><div class="shaka-playback-rate-presets"><button type="button" class="shaka-playback-rate-preset-btn shaka-chosen-item" role="menuitemradio" aria-checked="true" data-rate="1">1,0</button><button type="button" class="shaka-playback-rate-preset-btn" role="menuitemradio" aria-checked="false" data-rate="1.25">1,25</button><button type="button" class="shaka-playback-rate-preset-btn" role="menuitemradio" aria-checked="false" data-rate="1.5">1,5</button><button type="button" class="shaka-playback-rate-preset-btn" role="menuitemradio" aria-checked="false" data-rate="2">2,0</button><button type="button" class="shaka-playback-rate-preset-btn" role="menuitemradio" aria-checked="false" data-rate="3">3,0</button></div></div><button type="button" class="shaka-recenter-vr-button shaka-tooltip shaka-hidden" aria-label="Recenter"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M479-359q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm-57 222-85-85q-12-12-12-28T338-279q12-12 28-12t28 12l85 86 85-85q11-11 28-11t28 11q11 11 11 28t-11 28l-85 85q-12 12-27 18t-30 6q-15 0-30-6t-27-18ZM221-337l-85-85q-12-12-18-27t-6-30q0-15 6-30t18-27l85-85q12-12 28-12t28 12q12 12 12 28T278-564l-86 86 85 85q11 11 11 28t-11 28q-11 11-28 11t-28-11Zm116-401 85-85q12-12 27-18t30-6q15 0 30 6t27 18l85 85q12 12 12 28t-12 28q-12 12-28 12T564-682l-86-85-85 85q-11 11-28 11t-28-11q-11-11-11-28t11-28Zm344 343 85-85-85-85q-11-11-11-28t11-28q11-11 28-11t28 11l85 85q12 12 18 27t6 30q0 15-6 30t-18 27l-85 85q-12 12-28 12T681-338q-12-12-12-28t12-28Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only"><span>Recenter</span><span class="shaka-current-selection-span"></span></label></button><button type="button" class="shaka-toggle-stereoscopic-button shaka-tooltip shaka-hidden" aria-pressed="false" aria-label="Toggle stereoscopic"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M830-720H128C102-720 80-697 80-669v378c0 28 22 51 48 51h194c18 0 36-12 43-28l58-126c10-23 32-39 57-39s48 16 57 39l58 126c8 16 24 28 43 28h194c26 0 48-23 48-51V-669C880-697 856-720 830-720M300-380C245-380 200-425 200-480s45-100 100-100S400-535 400-480s-45 100-100 100m360 0c-55 0-100-45-100-100s45-100 100-100S760-535 760-480s-45 100-100 100Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only"><span>Toggle stereoscopic</span><span class="shaka-current-selection-span"></span></label></button></div><div class="shaka-no-propagation shaka-context-menu shaka-hidden" role="menu"><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-caption-position-button shaka-tooltip shaka-hidden" aria-label="Subtitle position" aria-pressed="false"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M160-240v-480 480Zm160-240v-80h-80v80h80Zm108 0q11-23 26-43t32-37h-86v80h28Zm-24 160q-2-10-2-20T401-360q0-11 0-20T404-400H240v80h164Zm81 160H160q-33 0-56-24T80-240v-480q0-33 24-56T160-800h640q33 0 56 24T880-720v166q-17-18-37-32T800-612v-108H160v480h268q11 23 25 43t32 37Zm235 0h-80l-12-60q-12-5-22-10T584-244l-58 18-40-68 46-40q-2-13-2-26t2-26l-46-40 40-68 58 18q11-8 22-14T628-500l12-60h80l12 60q12 5 23 12t21 14l58-20 40 70-46 40q2 13 2 25t-2 25l46 40-40 68-58-18q-11 8-22 14T732-220l-12 60Zm-40-120q33 0 56-24T760-360q0-33-24-56T680-440q-33 0-56 24T600-360q0 33 24 56T680-280Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Subtitle position</span><span class="shaka-current-selection-span">Default</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-text-positions" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Subtitle position</span></button><button type="button" role="menuitemradio" aria-checked="true"><span class="shaka-chosen-item">Default</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Top right</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Center right</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom left</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom center</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>Bottom right</span></button></div><button type="button" aria-haspopup="true" aria-expanded="false" class="shaka-overflow-button shaka-caption-size-button shaka-tooltip shaka-hidden" aria-label="Subtitle size" aria-pressed="false"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M160-240v-480 480Zm160-240v-80h-80v80h80Zm108 0q11-23 26-43t32-37h-86v80h28Zm-24 160q-2-10-2-20T401-360q0-11 0-20T404-400H240v80h164Zm81 160H160q-33 0-56-24T80-240v-480q0-33 24-56T160-800h640q33 0 56 24T880-720v166q-17-18-37-32T800-612v-108H160v480h268q11 23 25 43t32 37Zm235 0h-80l-12-60q-12-5-22-10T584-244l-58 18-40-68 46-40q-2-13-2-26t2-26l-46-40 40-68 58 18q11-8 22-14T628-500l12-60h80l12 60q12 5 23 12t21 14l58-20 40 70-46 40q2 13 2 25t-2 25l46 40-40 68-58-18q-11 8-22 14T732-220l-12 60Zm-40-120q33 0 56-24T760-360q0-33-24-56T680-440q-33 0-56 24T600-360q0 33 24 56T680-280Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-overflow-button-label-inline"><span>Subtitle size</span><span class="shaka-current-selection-span">100%</span></label></button><div class="shaka-no-propagation shaka-show-controls-on-mouse-over shaka-sub-menu shaka-hidden shaka-text-positions" role="menu"><button type="button" class="shaka-back-to-overflow-button" aria-label="Back"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m432-480 156 156q11 11 11 28t-11 28q-11 11-28 11t-28-11L348-452q-6-6-8-13t-2-15q0-8 2-15t8-13l184-184q11-11 28-11t28 11q11 11 11 28t-11 28L432-480Z"></path></svg><span>Subtitle size</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>50%</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>75%</span></button><button type="button" role="menuitemradio" aria-checked="true"><span class="shaka-chosen-item">100%</span><svg class="shaka-ui-icon shaka-chosen-item" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="m382-354 339-339q12-12 28-12t28 12q12 12 12 28T777-636L410-268q-12 12-28 12t-28-12L182-440q-12-12-12-28T183-497q12-12 28-12t28 12l142 143Z"></path></svg></button><button type="button" role="menuitemradio" aria-checked="false"><span>125%</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>150%</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>175%</span></button><button type="button" role="menuitemradio" aria-checked="false"><span>200%</span></button></div><button type="button" class="shaka-loop-button shaka-tooltip shaka-no-propagation shaka-hidden" aria-pressed="false" aria-label="Loop the current video"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M280-80 120-240l160-160 56 58-62 62h406v-160h80v240H274l62 62-56 58Zm-80-440v-240h486l-62-62 56-58 160 160-160 160-56-58 62-62H280v160h-80Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-simple-overflow-button-label-inline"><span>Loop</span><span class="shaka-current-selection-span">Off</span></label></button><button type="button" class="shaka-pip-button shaka-tooltip shaka-no-propagation" aria-pressed="false" aria-label="Enter Picture-in-Picture"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M120-520q-17 0-28-12T80-560q0-17 12-28T120-600h104L80-743q-12-12-12-28T80-800q12-12 28-12t28 12l143 144v-104q0-17 12-28T320-800q17 0 28 12T360-760v200q0 17-12 28T320-520H120Zm40 360q-33 0-56-24T80-240v-160q0-17 12-28T120-440q17 0 28 12T160-400v160h280q17 0 28 12T480-200q0 17-12 28T440-160H160Zm680-280q-17 0-28-12T800-480v-240H480q-17 0-28-12T440-760q0-17 12-28T480-800h320q33 0 56 24T880-720v240q0 17-12 28T840-440ZM600-160q-17 0-28-12T560-200v-120q0-17 12-28T600-360h240q17 0 28 12T880-320v120q0 17-12 28T840-160H600Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only shaka-simple-overflow-button-label-inline"><span>Picture-in-Picture</span><span class="shaka-current-selection-span">Off</span></label></button><button type="button" class="shaka-copy-video-frame-button shaka-tooltip shaka-hidden" aria-label="Copy video frame"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M360-240q-33 0-56-24T280-320v-480q0-33 24-56T360-880h360q33 0 56 24T800-800v480q0 33-24 56T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56-24T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only"><span>Copy video frame</span><span class="shaka-current-selection-span"></span></label></button><button type="button" class="shaka-save.video-frame-button shaka-tooltip shaka-hidden" aria-label="Save video frame"><svg class="shaka-ui-icon" aria-hidden="true" viewBox="0 -960 960 960" style="background-color: transparent;"><path d="M480-337q-8 0-15-2t-13-8L308-492q-12-12-12-28t12-28q12-12 28-12T365-549l75 75v-286q0-17 12-28T480-800q17 0 28 12T520-760v286l75-75q12-12 28-12T652-548q11 12 12 28T652-492L508-348q-6 6-13 8t-15 2ZM240-160q-33 0-56-24T160-240v-80q0-17 12-28T200-360q17 0 28 12T240-320v80h480v-80q0-17 12-28T760-360q17 0 28 12T800-320v80q0 33-24 56T720-160H240Z"></path></svg><label class="shaka-overflow-button-label shaka-overflow-menu-only"><span>Save video frame</span><span class="shaka-current-selection-span"></span></label></button></div></div><div class="shaka-client-side-ad-container shaka-hidden"></div><div class="shaka-server-side-ad-container shaka-hidden"></div><div class="shaka-spinner-container shaka-hidden"><div class="shaka-spinner"><svg focusable="false" stroke="currentColor" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" width="50px" height="50px" class="q-spinner text-grey-9">
+      <g transform="translate(1 1)" stroke-width="6" fill="none" fill-rule="evenodd">
+        <circle stroke-opacity=".5" cx="18" cy="18" r="16"></circle>
+        <path d="M34 18c0-9.94-8.06-16-16-16">
+          <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite">
+          </animateTransform>
+        </path>
+      </g>
+    </svg></div></div></div>
+    </div>
+
+    <h3 class="section-title">Available Streams</h3>
+    <div class="streams" id="streams"><button class="stream-btn active" data-player-stream="0" type="button">
+       <span class="title">WILLOW - AQ</span>
+       <span class="tags"><span class="type-badge dash">DASH</span></span>
+     </button><button class="stream-btn " data-player-stream="1" type="button">
+       <span class="title">FANCODE - AQ</span>
+       <span class="tags"><span class="type-badge dash">DASH</span></span>
+     </button><button class="stream-btn " data-player-stream="2" type="button">
+       <span class="title">SKY CRICKET - AQ</span>
+       <span class="tags"><span class="type-badge hls">HLS</span></span>
+     </button><button class="stream-btn " data-player-stream="3" type="button">
+       <span class="title">WILLOW - ALT</span>
+       <span class="tags"><span class="type-badge dash">DASH</span></span>
+     </button><button class="stream-btn " data-player-stream="4" type="button">
+       <span class="title">TAPMAD - AQ</span>
+       <span class="tags"><span class="type-badge hls">HLS</span></span>
+     </button><button class="stream-btn " data-player-stream="5" type="button">
+       <span class="title">FANCODE - IN</span>
+       <span class="tags"><span class="type-badge hls">HLS</span></span>
+     </button></div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/shaka-player@5.2.4/dist/shaka-player.ui.min.js"></script>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CONFIG — direct
+   ============================================================ */
+const DATA_URL = "https://sonujson-v6.pages.dev/Data/events/allinone.json";
+const LOG  = (...a) => console.log("[MALAYALAMSPORTS]", ...a);
+const WARN = (...a) => console.warn("[MALAYALAMSPORTS]", ...a);
+const ERR  = (...a) => console.error("[MALAYALAMSPORTS]", ...a);
+
+const $ = id => document.getElementById(id);
+
+const state = {
+  events: [],
+  sport: "All",
+  tab: "all",
+  currentEvent: null,
+  currentStreams: [],
+  currentIndex: 0
+};
+
+/* ============================================================
+   TELEGRAM POPUP CONTROLLER
+   ============================================================ */
+const TG = (function(){
+  const overlay = document.getElementById("tgOverlay");
+
+  function isOpen(){ return overlay.classList.contains("show"); }
+  function open(){ overlay.classList.add("show"); try{ document.body.style.overflow = "hidden"; }catch(_){} }
+  function close(){ overlay.classList.remove("show"); try{ document.body.style.overflow = ""; }catch(_){} }
+  function markSeen(){ try{ sessionStorage.setItem("tg_popup_seen","1"); }catch(_){} }
+  function wasSeen(){ try{ return sessionStorage.getItem("tg_popup_seen") === "1"; }catch(_){ return false; } }
+
+  document.getElementById("joinNow").addEventListener("click", () => {
+    window.open("https://www.whatsapp.com/channel/0029VbCQ4zz8F2pDiha9Io1H","_blank","noopener");
+    markSeen(); close();
+  });
+  document.getElementById("joinedBtn").addEventListener("click", () => { markSeen(); close(); });
+  overlay.addEventListener("click", (e) => {
+    if(e.target === overlay){ markSeen(); close(); }
+  });
+  document.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && isOpen()){ markSeen(); close(); }
+  });
+
+  return { open, close, isOpen, markSeen, wasSeen };
+})();
+
+/* ============================================================
+   TIER / DEVICE PROFILE
+   ============================================================ */
+function getTier(){
+  const mem = navigator.deviceMemory || 4;
+  const cores = navigator.hardwareConcurrency || 4;
+  const mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const net = conn ? (conn.effectiveType || "4g") : "4g";
+  if(!mob) return "high";
+  if(mem <= 1.5 || cores <= 2 || net === "slow-2g" || net === "2g") return "low";
+  if(mem <= 3 || cores <= 4) return "mid";
+  return "high";
+}
+const TIER = getTier();
+const PROF = {
+  low : { buf:4,  reBuf:1.5, behind:10, maxH:480,  maxBw:1000000, bwEst:400000  },
+  mid : { buf:7,  reBuf:1.5, behind:20, maxH:720,  maxBw:3000000, bwEst:1000000 },
+  high: { buf:10, reBuf:1.5, behind:25, maxH:1080, maxBw:0,       bwEst:2000000 }
+}[TIER];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function esc(v){
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function parseDate(value){
+  if(!value) return null;
+  let s = String(value).trim();
+  if(!s || s === "null" || s === "undefined") return null;
+
+  const isIST = /\bIST\b/i.test(s);
+  if(isIST) s = s.replace(/\s*IST\s*$/i, "").trim();
+
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?\s*([+-]\d{2}:?\d{2}|Z)?$/);
+  if(m){
+    const [,y,mo,d,h,mi,se="00",off] = m;
+    let offset = "+0000";
+    if(off) offset = off === "Z" ? "+0000" : (off.includes(":") ? off.replace(":","") : off);
+    else if(isIST) offset = "+0530";
+    const iso = `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}T${h.padStart(2,"0")}:${mi}:${se}${offset.slice(0,3)}:${offset.slice(3)}`;
+    const dt = new Date(iso);
+    if(!isNaN(dt.getTime())) return dt;
+  }
+
+  const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  m = s.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?\s*([+-]\d{2}:?\d{2})?$/i);
+  if(m){
+    const [,d,mon,y,h,mi,se="00",ampm,off] = m;
+    const mi2 = MONTHS[mon.toLowerCase().slice(0,3)];
+    if(mi2 !== undefined){
+      let hour = parseInt(h,10);
+      if(ampm){
+        if(ampm.toUpperCase() === "PM" && hour < 12) hour += 12;
+        if(ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
+      }
+      const offset = off ? (off.includes(":") ? off.replace(":","") : off) : (isIST ? "+0530" : "+0000");
+      const iso = `${y}-${String(mi2+1).padStart(2,"0")}-${d.padStart(2,"0")}T${String(hour).padStart(2,"0")}:${mi}:${se}${offset.slice(0,3)}:${offset.slice(3)}`;
+      const dt = new Date(iso);
+      if(!isNaN(dt.getTime())) return dt;
+    }
+  }
+  const dt = new Date(s);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function getStatus(e){
+  const now = Date.now();
+  if(now < e.st) return "soon";
+  if(now <= e.en) return "live";
+  return "done";
+}
+
+function duration(ms){
+  const mins = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(mins / 60), m = mins % 60;
+  if(h >= 24){ const d = Math.floor(h / 24); return `${d}d ${h % 24}h`; }
+  if(h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+function timeString(d){ return d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); }
+function dateString(d){ return d.toLocaleDateString([], {day:"numeric", month:"short"}); }
+
+function sportIcon(sport){
+  const s = String(sport).toLowerCase();
+  if(s.includes("cricket")) return "🏏";
+  if(s.includes("football") || s.includes("soccer")) return "⚽";
+  if(s.includes("wwe") || s.includes("wrestling")) return "🤼";
+  if(s.includes("basketball")) return "🏀";
+  if(s.includes("tennis")) return "🎾";
+  if(s.includes("baseball")) return "⚾";
+  if(s.includes("hockey")) return "🏒";
+  if(s.includes("motor") || s.includes("formula") || s.includes("motogp")) return "🏎️";
+  if(s.includes("boxing")) return "🥊";
+  if(s.includes("ufc") || s.includes("mma")) return "🥋";
+  if(s.includes("snooker") || s.includes("pool")) return "🎱";
+  if(s.includes("cycling")) return "🚴";
+  return "🏆";
+}
+
+function crest(url, name){
+  const initials = String(name || "")
+    .replace(/[^A-Za-z0-9 ]/g,"").split(/\s+/).filter(Boolean)
+    .map(x => x[0]).join("").slice(0,3).toUpperCase() || "?";
+  if(!url || url === "null") return `<div class="crest">${esc(initials)}</div>`;
+  return `<div class="crest"><span>${esc(initials)}</span><img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div>`;
+}
+
+/* ============================================================
+   FETCH & NORMALIZE
+   ============================================================ */
+async function fetchJson(url){
+  LOG("Fetching:", url);
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  const text = await res.text();
+  if(text.trim().startsWith("<")) throw new Error("Server returned HTML instead of JSON.");
+  try{ return JSON.parse(text); }
+  catch(err){ throw new Error("Invalid JSON: " + err.message); }
+}
+
+function normalize(data){
+  const list = Array.isArray(data) ? data : (data && Array.isArray(data.events) ? data.events : null);
+  if(!list) throw new Error("Expected an events array.");
+  const events = [];
+  let ok = 0, skipped = 0;
+
+  list.forEach((item, index) => {
+    try{
+      const info = item.event || {};
+      const st = parseDate(info.startTimeIST) || parseDate(info.startTime) || parseDate(item.startTime);
+      if(!st){ skipped++; return; }
+      let en = parseDate(info.endTimeIST) || parseDate(info.endTime) || parseDate(item.endTime);
+      if(!en || en <= st) en = new Date(st.getTime() + 3 * 3600000);
+
+      const rawStreams = Array.isArray(item.streams) ? item.streams : [];
+      const seen = new Set();
+      const streams = [];
+      rawStreams.forEach((s, i) => {
+        if(!s) return;
+        const link = String(s.link || s.url || "").split("|")[0].trim();
+        if(!link || !/^https?:\/\//i.test(link)) return;
+        if(seen.has(link)) return;
+        const t = String(s.type || "").toLowerCase();
+        const isDash = t === "dash" || /\.mpd(\?|$)/i.test(link);
+        const isHls  = t === "hls"  || t === "0" || /\.m3u8(\?|$)/i.test(link);
+        if(!isDash && !isHls) return;
+        seen.add(link);
+        streams.push({
+          title: String(s.title || s.name || `Stream ${i+1}`).trim(),
+          link,
+          type: isDash ? "DASH" : "HLS",
+          key: String(s.api || s.key || "").trim()
+        });
+      });
+
+      events.push({
+        id: item.id ?? String(index),
+        sport: String(info.category || info.name || item.cat || "Other").trim(),
+        comp: String(info.type || info.name || item.title || "").trim(),
+        a: info.teamA || info.home || "",
+        b: info.teamB || info.away || "",
+        fa: info.teamAFlag || info.homeFlag || "",
+        fb: info.teamBFlag || info.awayFlag || "",
+        st, en, streams
+      });
+      ok++;
+    }catch(err){ ERR(`Event #${index} error:`, err); skipped++; }
+  });
+  LOG(`Normalize done — ok=${ok}, skipped=${skipped}`);
+  return events;
+}
+
+async function loadData(){
+  try{
+    const raw = await fetchJson(DATA_URL);
+    state.events = normalize(raw);
+    if(!state.events.length){
+      $("list").innerHTML = `<div class="state"><div class="err-icon">!</div><h3>No events found</h3><p>The feed loaded but no matches had a usable start time.</p></div>`;
+      return;
+    }
+    renderHub();
+    if(!window.__booted){
+      window.__booted = true;
+      route();
+      maybeShowHubPopup();
+    }
+  }catch(err){
+    ERR("Load failed:", err);
+    $("list").innerHTML = `<div class="state"><div class="err-icon">!</div><h3>Could not load events</h3><p>${esc(err.message)}</p></div>`;
+  }
+}
+
+/* ============================================================
+   HUB RENDERING
+   ============================================================ */
+function eventCard(e){
+  const status = getStatus(e);
+  const now = Date.now();
+  const isLive = status === "live";
+  let statusClass = "", statusText = "";
+  if(status === "live"){ statusClass = "live"; statusText = "Live"; }
+  else if(status === "soon"){ statusClass = "soon"; statusText = `in ${duration(e.st - now)}`; }
+  else { statusClass = "done"; statusText = "Finished"; }
+  const n = e.streams.length;
+  const streamInfo = n === 0 ? `<span class="stream-count empty">No streams</span>` : `<span class="stream-count">${n} stream${n > 1 ? "s" : ""}</span>`;
+  const sameTeam = !e.b || e.a === e.b;
+  const sideA = `<div class="team">${crest(e.fa, e.a || e.comp)}<div class="team-name">${esc(e.a || e.comp || "TBD")}</div></div>`;
+  const sideB = sameTeam ? `<div class="team"></div>` : `<div class="team">${crest(e.fb, e.b)}<div class="team-name">${esc(e.b)}</div></div>`;
+  return `
+    <button class="card ${isLive ? "is-live" : ""}" data-watch-event="${esc(e.id)}" type="button" aria-label="${esc(e.a)} vs ${esc(e.b || "TBD")}">
+      <div class="card-top">
+        <span class="sport-chip"><span class="icon">${sportIcon(e.sport)}</span><span class="name">${esc(e.sport)}${e.comp ? " · " + esc(e.comp) : ""}</span></span>
+        <span class="status ${statusClass}">${statusText}</span>
+      </div>
+      <div class="card-body">
+        ${sideA}
+        <div class="versus"><div class="kickoff-time">${timeString(e.st)}</div><div class="kickoff-date">${dateString(e.st)} · IST</div></div>
+        ${sideB}
+      </div>
+      <div class="card-foot">${streamInfo}<span class="watch-cta">Watch <span class="arrow">→</span></span></div>
+    </button>
+  `;
+}
+
+function renderHub(){
+  const counts = {live:0, soon:0, done:0};
+  state.events.forEach(e => counts[getStatus(e)]++);
+  const sports = ["All", ...new Set(state.events.map(e => e.sport).filter(Boolean))];
+  $("sports").innerHTML = sports.map(s => {
+    const n = s === "All" ? state.events.length : state.events.filter(e => e.sport === s).length;
+    return `<button class="pill ${state.sport === s ? "active" : ""}" data-sport="${esc(s)}" role="tab">${s === "All" ? "🏆" : sportIcon(s)} ${esc(s)}<span class="count">${n}</span></button>`;
+  }).join("");
+  const tabs = [["all","All",state.events.length],["live","Live",counts.live],["soon","Upcoming",counts.soon]];
+  $("tabs").innerHTML = tabs.map(([key,label,n]) =>
+    `<button class="pill ${state.tab === key ? "active" : ""}" data-tab="${key}" role="tab">${key === "live" ? "🔴" : key === "soon" ? "📅" : "✅"} ${label}<span class="count">${n}</span></button>`
+  ).join("");
+  const rows = state.events
+    .filter(e => (state.tab === "all" || getStatus(e) === state.tab) && (state.sport === "All" || e.sport === state.sport))
+    .sort((a, b) => {
+      const order = {live:0, soon:1, done:2};
+      const sa = order[getStatus(a)] ?? 3, sb = order[getStatus(b)] ?? 3;
+      if(sa !== sb) return sa - sb;
+      return a.st - b.st;
+    });
+  $("list").innerHTML = rows.length ? rows.map(eventCard).join("") : `<div class="state"><h3>No matches found</h3><p>Try a different filter.</p></div>`;
+  $("clock").textContent = new Date().toLocaleString([], {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"}) + " IST";
+}
+
+/* ============================================================
+   HUB POPUP (landing page only, once per session)
+   ============================================================ */
+function maybeShowHubPopup(){
+  if(TG.wasSeen()) return;
+  if(location.hash.includes("watch")) return; // direct watch URL — handled in player
+  setTimeout(() => {
+    if(!TG.isOpen() && !location.hash.includes("watch")){
+      TG.open();
+    }
+  }, 3000);
+}
+
+/* ============================================================
+   ROUTER — opens player directly, no popup gate
+   ============================================================ */
+function route(){
+  const raw = location.hash.replace(/^#\/?/, "");
+  const [path, qs] = raw.split("?");
+  const params = new URLSearchParams(qs || "");
+  if(path === "watch") openPlayer(params.get("id"), Number(params.get("stream") || 0));
+  else showHub();
+}
+
+function showHub(){
+  stopPlayback();
+  state.currentEvent = null;
+  state.currentStreams = [];
+  $("playerView").classList.remove("active");
+  $("hubView").classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   PLAYER STATE
+   ============================================================ */
+let player = null;
+let overlay = null;
+let jwInstance = null;
+let playbackToken = 0;
+
+let sessionStart = 0;
+let thermalTimer = null;
+let thermalApplied = false;
+let restrictionsRelaxed = false;
+let refreshing = false;
+let retries = 0;
+let edgeTried = false;
+let started = false;
+let stallTmr = null;
+let currentStreamInfo = null;
+let jwFitMode = 0;
+
+/* TG shown flag — reset per match open, blocks popup on stream switch */
+let tgShownForMatch = false;
+
+/* Trigger the popup AFTER playback starts */
+function showPlayerTGPopup(){
+  if(tgShownForMatch) return;
+  tgShownForMatch = true;
+  setTimeout(() => {
+    if(!TG.isOpen()) TG.open();
+  }, 1500);
+}
+
+/* ============================================================
+   OPEN PLAYER
+   ============================================================ */
+async function openPlayer(id, index){
+  $("hubView").classList.remove("active");
+  $("playerView").classList.add("active");
+  window.scrollTo(0, 0);
+
+  const event = state.events.find(e => String(e.id) === String(id));
+  if(!event){
+    state.currentEvent = null;
+    state.currentStreams = [];
+    $("playerTitle").textContent = "Match not found";
+    $("playerSub").textContent = "";
+    $("streams").innerHTML = "";
+    $("player-container").innerHTML = `<div class="screen-msg">This match is no longer available.</div>`;
+    return;
+  }
+
+  state.currentEvent = event;
+  state.currentStreams = event.streams || [];
+  state.currentIndex = index;
+
+  // Reset the flag — popup will show again after this match plays
+  tgShownForMatch = false;
+
+  $("playerTitle").textContent = event.a && event.b ? `${event.a} vs ${event.b}` : (event.comp || "MALAYALAMSPORTS Player");
+  $("playerSub").textContent = [event.sport, event.comp].filter(Boolean).join(" · ");
+
+  renderPlayerStreams(index);
+
+  const record = state.currentStreams[index];
+  if(record) await playRecord(record, index);
+  else $("player-container").innerHTML = `<div class="screen-msg">No playable streams for this match.</div>`;
+}
+
+/* ============================================================
+   TOAST / ERR
+   ============================================================ */
+function toast(msg, type, dur){
+  const el = $("status");
+  if(!el) return;
+  el.innerHTML = `<span class="st-dot"></span><span>${esc(msg)}</span>`;
+  el.className = "show " + (type || "ok");
+  clearTimeout(el.__tmr);
+  if(dur !== 0){
+    el.__tmr = setTimeout(() => {
+      el.className = el.className.replace("show","").trim();
+    }, dur || 4000);
+  }
+}
+
+function shakaErrStr(e){
+  if(!e) return "Playback Error";
+  const cat = {1:"Network",2:"Text",3:"Media",4:"Manifest",5:"Stream",6:"DRM",7:"Player"};
+  let s = (cat[e.category] || "Error") + " " + e.category + ":" + e.code;
+  if(e.data && e.data[0] && typeof e.data[0] === "string") s += " — " + e.data[0].slice(0,72);
+  return s;
+}
+
+function ratioLabel(w,h){
+  if(!w || !h) return "—";
+  const gcd = (a,b) => b ? gcd(b,a%b) : a;
+  const g = gcd(w,h) || 1;
+  const rw = w/g, rh = h/g;
+  const named = {"16:9":16/9,"4:3":4/3,"21:9":21/9,"1:1":1,"9:16":9/16,"3:2":3/2,"5:4":5/4,"2:1":2};
+  const real = w/h;
+  let best = null, bestD = .02;
+  Object.keys(named).forEach(k => {
+    const d = Math.abs(named[k] - real);
+    if(d < bestD){ bestD = d; best = k; }
+  });
+  if(best) return best;
+  if(rw <= 40 && rh <= 40) return rw + ":" + rh;
+  return real.toFixed(2) + ":1";
+}
+
+function getClearKey(record){
+  const raw = String(record && record.key || "").trim();
+  if(!raw || !raw.includes(":")) return null;
+  const parts = raw.split(":");
+  if(parts.length < 2) return null;
+  const kid = parts.shift().trim().replace(/^0x/i,"").toLowerCase();
+  const key = parts.join(":").trim().replace(/^0x/i,"").toLowerCase();
+  if(!/^[0-9a-f]+$/.test(kid) || !/^[0-9a-f]+$/.test(key)) return null;
+  return {keyId: kid, key};
+}
+
+function makeLoadingEl(){
+  const el = document.createElement("div");
+  el.className = "loading-overlay";
+  el.innerHTML = `<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="#1a1a1a" stroke-width="4"/><path d="M20 4a16 16 0 0 1 16 16" stroke="#00E5B0" stroke-width="4" stroke-linecap="round"/></svg><p>Loading stream…</p>`;
+  return el;
+}
+
+/* ============================================================
+   FIT BUTTON (Shaka)
+   ============================================================ */
+function injectFitButton(container, vid){
+  const panel = container.querySelector(".shaka-controls-button-panel");
+  if(!panel) return false;
+  if(panel.querySelector(".sp-fit-btn")) return true;
+  const anchor = panel.querySelector(".shaka-fullscreen-button");
+  const FITS = ["contain","fill","cover"];
+  const FIT_LABELS = {contain:"Fit", fill:"Fill", cover:"Zoom"};
+  let fitIdx = 0;
+  const fitBtn = document.createElement("button");
+  fitBtn.className = "sp-btn sp-fit-btn";
+  fitBtn.title = "Video Fit: Fit";
+  fitBtn.setAttribute("aria-label", "Cycle Video Fit Mode");
+  fitBtn.innerHTML = '<span class="fit-pill">—</span>';
+  if(anchor) panel.insertBefore(fitBtn, anchor);
+  else panel.appendChild(fitBtn);
+  let currentRatio = "—";
+  function applyFit(i){
+    fitIdx = i;
+    const m = FITS[i];
+    vid.classList.remove("mode-fill","mode-cover");
+    if(m === "fill") vid.classList.add("mode-fill");
+    if(m === "cover") vid.classList.add("mode-cover");
+    fitBtn.classList.remove("mode-fill","mode-cover");
+    if(m !== "contain") fitBtn.classList.add("mode-" + m);
+    fitBtn.title = "Video Fit: " + FIT_LABELS[m];
+    const pill = fitBtn.querySelector(".fit-pill");
+    if(pill) pill.textContent = m === "contain" ? currentRatio : FIT_LABELS[m];
+  }
+  fitBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    applyFit((fitIdx + 1) % FITS.length);
+  });
+  ["fullscreenchange","webkitfullscreenchange"].forEach(ev => {
+    document.addEventListener(ev, () => {
+      if(!document.fullscreenElement && !document.webkitFullscreenElement) applyFit(0);
+    });
+  });
+  let ratioTries = 0;
+  function updateRatio(){
+    const pill = fitBtn.querySelector(".fit-pill");
+    if(!pill) return;
+    if(vid.videoWidth > 0){
+      currentRatio = ratioLabel(vid.videoWidth, vid.videoHeight);
+      if(FITS[fitIdx] === "contain") pill.textContent = currentRatio;
+      ratioTries = 0;
+    } else if(ratioTries < 15){
+      ratioTries++;
+      setTimeout(updateRatio, 700);
+    }
+  }
+  vid.addEventListener("loadedmetadata", () => { ratioTries = 0; updateRatio(); });
+  vid.addEventListener("resize", updateRatio);
+  vid.addEventListener("timeupdate", function onFirst(){ vid.removeEventListener("timeupdate", onFirst); updateRatio(); });
+  updateRatio();
+  return true;
+}
+
+/* ============================================================
+   PLAYER CONFIG BUILDER (Shaka)
+   ============================================================ */
+function buildCfg(){
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const effMaxH = thermalApplied && mobile ? Math.min(PROF.maxH, 720) : PROF.maxH;
+  const restr = {};
+  if(!restrictionsRelaxed){
+    if(effMaxH < 1080) restr.maxHeight = effMaxH;
+    if(PROF.maxBw > 0) restr.maxBandwidth = PROF.maxBw;
+  }
+  return {
+    manifest:{ defaultPresentationDelay:4, ignoreTextStreamFailures:true, retryParameters:{ maxAttempts:5, baseDelay:500, backoffFactor:2, fuzzFactor:.5, timeout:30000 } },
+    streaming:{ lowLatencyMode:false, bufferingGoal:PROF.buf, rebufferingGoal:PROF.reBuf, bufferBehind:PROF.behind, safeSeekOffset:4, stallEnabled:true, stallThreshold:1, stallSkip:.3, inaccurateManifestTolerance:0, retryParameters:{ maxAttempts:5, baseDelay:500, backoffFactor:2, fuzzFactor:.5, timeout:30000 } },
+    abr:{ enabled:true, defaultBandwidthEstimate:PROF.bwEst, switchInterval:4, restrictions:restr }
+  };
+}
+
+/* ============================================================
+   DESTROY
+   ============================================================ */
+async function destroyPlayer(){
+  if(stallTmr){ clearTimeout(stallTmr); stallTmr = null; }
+  if(thermalTimer){ clearInterval(thermalTimer); thermalTimer = null; }
+  if(jwInstance){ try{ jwInstance.remove(); }catch(e){} jwInstance = null; }
+  if(overlay){ try{ overlay.destroy(); }catch(e){} overlay = null; }
+  if(player){ try{ await player.destroy(); }catch(e){} player = null; }
+  const c = $("player-container");
+  if(c) c.innerHTML = "";
+  currentStreamInfo = null;
+  sessionStart = 0; thermalApplied = false; restrictionsRelaxed = false;
+  refreshing = false; retries = 0; edgeTried = false; started = false;
+  jwFitMode = 0;
+}
+
+async function stopPlayback(){
+  playbackToken++;
+  await destroyPlayer();
+}
+
+/* ============================================================
+   JW PLAYER (HLS) — popup fires from "play" event
+   ============================================================ */
+async function mountJWPlayer(record, token){
+  if(!window.jwplayer){
+    $("player-container").innerHTML = `<div class="screen-msg">JW Player failed to load.</div>`;
+    return;
+  }
+  const container = $("player-container");
+  container.innerHTML = "";
+  const root = document.createElement("div");
+  root.id = "jw-root";
+  container.appendChild(root);
+  const statusEl = document.createElement("div");
+  statusEl.id = "status";
+  container.appendChild(statusEl);
+  const loadEl = makeLoadingEl();
+  container.appendChild(loadEl);
+  jwInstance = window.jwplayer(root);
+  toast("Loading Stream…", "warn", 0);
+  jwInstance.setup({
+    file: record.link, autostart: true, mute: true,
+    primary: "html5", hlshtml: true,
+    width: "100%", height: "100%",
+    crossorigin: "anonymous",
+    stretching: "uniform",
+    playbackRateControls: false,
+    displaytitle: false
+  });
+
+  jwInstance.on("ready", () => {
+    if(token !== playbackToken) return;
+    loadEl.hidden = true;
+    toast("Ready — Tap ▶ To Play", "ok", 5000);
+    try{
+      const fitSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z"/></svg>`;
+      const fitIcon = "data:image/svg+xml," + encodeURIComponent(fitSvg);
+      jwInstance.addButton(fitIcon, "Fit", cycleJwFit, "sp-jw-fit");
+    }catch(e){}
+  });
+
+  jwInstance.on("play", () => {
+    if(token !== playbackToken) return;
+    started = true;
+    retries = 0;
+    toast("Live", "live", 3000);
+    /* ★ SHOW TG POPUP AFTER PLAYING */
+    showPlayerTGPopup();
+  });
+
+  jwInstance.on("buffer", () => {
+    if(token !== playbackToken) return;
+    toast("Buffering…", "warn", 0);
+  });
+
+  jwInstance.on("error", (e) => {
+    if(token !== playbackToken) return;
+    ERR("JW Player error:", e);
+    if(retries >= 5){ toast("Stream Unavailable. Please Try Again Later.", "err", 0); return; }
+    retries++;
+    const attempt = retries;
+    toast(`Reconnecting… (${attempt}/5)`, "warn", 0);
+    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+    setTimeout(() => {
+      if(token !== playbackToken) return;
+      try{ jwInstance.load(record.link); jwInstance.play(); }catch(err){ ERR("JW reload failed:", err); }
+    }, delay);
+  });
+
+  jwInstance.on("setupError", (e) => {
+    if(token !== playbackToken) return;
+    ERR("JW setupError:", e);
+    loadEl.hidden = true;
+    toast("Invalid stream URL", "err", 6000);
+  });
+
+  const unmuteOnce = () => { try{ jwInstance.setMute(false); }catch(_){} };
+  container.addEventListener("pointerdown", unmuteOnce, {capture:true, once:true});
+  container.addEventListener("click", unmuteOnce, {capture:true, once:true});
+  container.addEventListener("keydown", unmuteOnce, {capture:true, once:true});
+}
+
+function cycleJwFit(){
+  const modes  = ["uniform", "exactfit", "fill"];
+  const labels = ["Fit", "Fill", "Zoom"];
+  jwFitMode = (jwFitMode + 1) % modes.length;
+  try{ jwInstance.setStretching(modes[jwFitMode]); }catch(e){}
+  toast("Fit: " + labels[jwFitMode], "ok", 1500);
+}
+
+/* ============================================================
+   SHAKA PLAYER (DASH + ClearKey) — popup fires from "playing" event
+   ============================================================ */
+async function mountShaka(record, token){
+  shaka.polyfill.installAll();
+  if(!shaka.Player.isBrowserSupported()) throw new Error("Browser not supported.");
+
+  const container = $("player-container");
+  container.innerHTML = "";
+
+  const vid = document.createElement("video");
+  vid.id = "shaka-video";
+  vid.playsInline = true;
+  vid.setAttribute("playsinline","");
+  vid.setAttribute("webkit-playsinline","");
+  vid.preload = "none";
+  vid.muted = true;
+  vid.autoplay = true;
+  container.appendChild(vid);
+
+  const statusEl = document.createElement("div");
+  statusEl.id = "status";
+  container.appendChild(statusEl);
+
+  const loadEl = makeLoadingEl();
+  container.appendChild(loadEl);
+
+  player = new shaka.Player();
+  await player.attach(vid);
+
+  overlay = new shaka.ui.Overlay(player, container, vid);
+  overlay.configure({
+    controlPanelElements: ["play_pause","mute","volume","time_and_duration","spacer","picture_in_picture","fullscreen","overflow_menu"],
+    seekBarColors: { base:"#828282", buffered:"#ffc336", played:"#1fc7ff" }
+  });
+
+  let tries = 0;
+  (function tryInject(){
+    if(injectFitButton(container, vid)) return;
+    if(++tries < 10) setTimeout(tryInject, 150);
+  })();
+
+  const key = getClearKey(record);
+  if(key){ player.configure({ drm:{ clearKeys:{ [key.keyId]: key.key } } }); LOG("ClearKey applied:", key.keyId); }
+  else { player.configure({ drm: {} }); }
+
+  player.configure(buildCfg());
+
+  sessionStart = Date.now();
+  thermalTimer = setInterval(() => {
+    if(Date.now() - sessionStart < 60 * 60 * 1000) return;
+    clearInterval(thermalTimer); thermalTimer = null;
+    if(thermalApplied) return;
+    thermalApplied = true;
+    try{
+      player.configure("streaming.bufferBehind", 8);
+      if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+        player.configure("abr.restrictions.maxHeight", Math.min(PROF.maxH, 720));
+      }
+    }catch(_){}
+  }, 60000);
+
+  const streamInfo = { url: record.link, type: record.type };
+  currentStreamInfo = streamInfo;
+
+  async function reload(){
+    if(refreshing || token !== playbackToken || !player) return;
+    if(retries >= 5){ toast("Stream Unavailable. Please Try Again Later.", "err", 0); return; }
+    refreshing = true; retries++;
+    const attempt = retries;
+    toast(`Reconnecting… (${attempt}/5)`, "warn", 0);
+    try{
+      player.configure(buildCfg());
+      await player.load(streamInfo.url);
+      if(token !== playbackToken){ refreshing = false; return; }
+      vid.play().catch(()=>{});
+      retries = 0; edgeTried = false;
+      toast("Live", "live", 4000);
+      refreshing = false;
+    }catch(err){
+      LOG(`Reload attempt ${attempt} failed:`, err);
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      setTimeout(() => { refreshing = false; reload(); }, delay);
+    }
+  }
+
+  function goLiveEdge(){
+    if(refreshing || token !== playbackToken || !player) return;
+    try{ player.goToLive(); edgeTried = true; toast("Syncing To Live Edge…", "warn", 2000); }
+    catch(_){ reload(); }
+  }
+
+  const RECOVERABLE = [1001,1002,1003,4012,6006,6007,7000,7001,7002];
+  player.addEventListener("error", (ev) => {
+    if(token !== playbackToken) return;
+    const err = ev.detail, code = err && err.code;
+    if(code === 4014 && !restrictionsRelaxed){
+      restrictionsRelaxed = true; refreshing = true;
+      toast("Adjusting Quality…", "warn", 2000);
+      player.configure(buildCfg());
+      player.load(streamInfo.url)
+        .then(() => { if(token !== playbackToken) return; vid.play().catch(()=>{}); retries = 0; toast("Live","live",4000); })
+        .catch(() => { if(token === playbackToken) setTimeout(reload, 500); })
+        .finally(() => { refreshing = false; });
+      return;
+    }
+    if(RECOVERABLE.includes(code)){
+      toast("Buffering…", "warn", 0);
+      setTimeout(() => { if(!refreshing) reload(); }, 500);
+    } else {
+      toast(shakaErrStr(err), "err", 6000);
+    }
+  });
+
+  vid.addEventListener("waiting", () => {
+    if(stallTmr) return;
+    toast("Buffering…", "warn", 0);
+    if(!started || refreshing) return;
+    stallTmr = setTimeout(() => {
+      stallTmr = null;
+      if(!edgeTried) goLiveEdge(); else reload();
+    }, 5000);
+  });
+  vid.addEventListener("stalled", () => {
+    if(!stallTmr) vid.dispatchEvent(new Event("waiting"));
+  });
+
+  /* ★ SHOW TG POPUP AFTER PLAYING */
+  vid.addEventListener("playing", () => {
+    started = true;
+    if(stallTmr){ clearTimeout(stallTmr); stallTmr = null; }
+    if(!refreshing) toast("Live", "live", 3000);
+    showPlayerTGPopup();
+  });
+
+  vid.addEventListener("error", () => {
+    if(refreshing) return;
+    toast("Buffering…", "warn", 0);
+    setTimeout(() => { if(!refreshing) reload(); }, 500);
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if(!document.hidden){
+      setTimeout(() => {
+        if(started && vid.paused && !refreshing) vid.play().catch(()=>{});
+      }, 400);
+    }
+  });
+
+  const unmuteOnce = () => { vid.muted = false; };
+  container.addEventListener("pointerdown", unmuteOnce, {capture:true, once:true});
+  container.addEventListener("click", unmuteOnce, {capture:true, once:true});
+  container.addEventListener("keydown", unmuteOnce, {capture:true, once:true});
+
+  const netConn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if(netConn){
+    netConn.addEventListener("change", () => {
+      if(!player || restrictionsRelaxed) return;
+      const t = netConn.effectiveType || "4g";
+      const h = (t === "slow-2g" || t === "2g") ? 240 : t === "3g" ? 480 : PROF.maxH;
+      try{ player.configure("abr.restrictions.maxHeight", h); }catch(_){}
+      if(h < PROF.maxH) toast("Slow Network — Reducing Quality", "warn", 3000);
+    });
+  }
+
+  if("wakeLock" in navigator){ navigator.wakeLock.request("screen").catch(()=>{}); }
+
+  try{
+    toast("Loading Stream…", "warn", 0);
+    await player.load(streamInfo.url);
+    if(token !== playbackToken) return;
+    loadEl.hidden = true;
+    toast("Ready — Tap ▶ To Play", "ok", 5000);
+    vid.muted = true;
+    vid.play().catch(() => LOG("Autoplay blocked"));
+  }catch(e){
+    ERR("Initial load failed:", e);
+    loadEl.hidden = true;
+    toast("Connection Error — Retrying…", "warn", 0);
+    setTimeout(reload, 800);
+  }
+}
+
+/* ============================================================
+   DISPATCH
+   ============================================================ */
+async function mountPlayer(record, token){
+  if(record.type === "HLS"){ LOG("Mounting JW Player for HLS:", record.link); return mountJWPlayer(record, token); }
+  LOG("Mounting Shaka for DASH:", record.link);
+  return mountShaka(record, token);
+}
+
+async function playRecord(record, index){
+  if(!record) return;
+  document.querySelectorAll("[data-player-stream]").forEach((btn, i) => btn.classList.toggle("active", i === index));
+  const token = ++playbackToken;
+  await destroyPlayer();
+  const rawUrl = String(record.link || "").split("|")[0].trim();
+  if(!/^https?:\/\//i.test(rawUrl)){
+    $("player-container").innerHTML = `<div class="screen-msg">Invalid stream link.</div>`;
+    return;
+  }
+  try{
+    await mountPlayer({...record, link: rawUrl}, token);
+  }catch(error){
+    if(token === playbackToken){
+      $("player-container").innerHTML = `<div class="screen-msg">Could not play this stream.<small>${esc(error.message || "")}</small></div>`;
+      ERR("Playback error:", error);
+    }
+  }
+}
+
+function renderPlayerStreams(activeIndex){
+  const box = $("streams");
+  if(!state.currentStreams.length){
+    box.innerHTML = `<div class="state" style="padding:40px 20px"><p>No streams were found for this event.</p></div>`;
+    return;
+  }
+  box.innerHTML = state.currentStreams.map((s, i) =>
+    `<button class="stream-btn ${i === activeIndex ? "active" : ""}" data-player-stream="${i}" type="button">
+       <span class="title">${esc(s.title)}</span>
+       <span class="tags"><span class="type-badge ${s.type.toLowerCase()}">${esc(s.type)}</span></span>
+     </button>`
+  ).join("");
+}
+
+/* ============================================================
+   ROTATION
+   ============================================================ */
+function onViewportChange(){
+  if(overlay && overlay.getControls){ try{ overlay.getControls().dispatchEvent(new Event("resize")); }catch(_){} }
+  if(jwInstance && typeof jwInstance.resize === "function"){ try{ jwInstance.resize("100%","100%"); }catch(_){} }
+}
+let rotationAttached = false;
+function setupRotation(){
+  if(rotationAttached) return;
+  rotationAttached = true;
+  window.addEventListener("resize", onViewportChange, {passive:true});
+  window.addEventListener("orientationchange", () => { setTimeout(onViewportChange, 200); setTimeout(onViewportChange, 450); });
+  document.addEventListener("fullscreenchange", () => {
+    if(document.fullscreenElement){
+      if(screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(()=>{});
+    } else {
+      if(screen.orientation && screen.orientation.unlock){ try{ screen.orientation.unlock(); }catch(_){} }
+    }
+    setTimeout(onViewportChange, 120);
+  });
+}
+
+/* ============================================================
+   DOM EVENTS
+   ============================================================ */
+$("list").addEventListener("click", e => {
+  const card = e.target.closest("[data-watch-event]");
+  if(!card) return;
+  location.hash = `#watch?id=${encodeURIComponent(card.dataset.watchEvent)}&stream=0`;
+});
+
+$("sports").addEventListener("click", e => {
+  const btn = e.target.closest("[data-sport]"); if(!btn) return;
+  state.sport = btn.dataset.sport; renderHub();
+});
+
+$("tabs").addEventListener("click", e => {
+  const btn = e.target.closest("[data-tab]"); if(!btn) return;
+  state.tab = btn.dataset.tab; renderHub();
+});
+
+$("streams").addEventListener("click", e => {
+  const btn = e.target.closest("[data-player-stream]");
+  if(!btn || !state.currentEvent) return;
+  const index = Number(btn.dataset.playerStream);
+  if(!state.currentStreams[index]) return;
+  state.currentIndex = index;
+  history.replaceState(null, "", `#watch?id=${encodeURIComponent(state.currentEvent.id)}&stream=${index}`);
+  playRecord(state.currentStreams[index], index);
+});
+
+$("backHub").onclick = () => { location.hash = "#/"; };
+window.addEventListener("hashchange", route);
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+setupRotation();
+loadData();
+setInterval(() => { if(window.__booted) renderHub(); }, 30000);
+setInterval(() => { if(window.__booted && !location.hash.includes("watch")) loadData(); }, 120000);
+</script>
+
+
+</body>
